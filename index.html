@@ -623,7 +623,7 @@ npm run dev</pre>
      La clave es pública por diseño y está atada al dominio nazarenods.github.io. */
   var WEB3FORMS_KEY = "52cc7d4c-3d9f-4350-93ac-ec1f826c1490";
   var f = document.getElementById("f"), ok = document.getElementById("ok"), LKEY = "lamppy-contacto", loadedAt = Date.now();
-  /* limitador del lado del navegador: 1 envío cada 30 s y 3 por hora. Frena el uso torpe; el límite real lo pone Formspree. */
+  /* limitador del lado del navegador: 1 envío cada 30 s y 3 por hora. Frena el uso torpe; el límite real lo pone Web3Forms. */
   function recent() { try { return JSON.parse(localStorage.getItem(LKEY) || "[]").filter(function (t) { return Date.now() - t < 3600000; }); } catch (e) { return []; } }
   function remember() { try { var r = recent(); r.push(Date.now()); localStorage.setItem(LKEY, JSON.stringify(r)); } catch (e) {} }
   f.addEventListener("submit", function (e) {
