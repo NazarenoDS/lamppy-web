@@ -28,7 +28,7 @@ ese correo aparezca en la página ni en el repo. La clave de acceso (`WEB3FORMS_
 diseño y está atada al dominio `nazarenods.github.io`: **solo funciona desde ahí** (y desde `localhost` si se agregó en Web3Forms).
 Abriendo `index.html` como archivo, o desde otro dominio, el envío falla.
 
-Limitadores: campo trampa `botcheck` contra bots, y en el navegador 1 envío cada 30 s y 3 por hora. El límite real y el
+Limitadores: hCaptcha de Web3Forms (se carga con su script y se valida al enviar), campo trampa `botcheck`, y en el navegador 1 envío cada 30 s y 3 por hora. El límite real y el
 antispam los pone Web3Forms según el plan.
 
 ## Pendiente
