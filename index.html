@@ -362,7 +362,7 @@ a { color: inherit; }
     <form id="f">
       <label for="email">Tu email</label>
       <input id="email" type="email" required autocomplete="email" placeholder="vos@correo.com">
-      <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
+      <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
       <button type="submit">Quiero usarla</button>
     </form>
     <p class="ok" id="ok" hidden>Gracias. Te escribimos pronto.</p>
@@ -619,9 +619,9 @@ npm run dev</pre>
   document.getElementById("cform").addEventListener("submit", function (e) { e.preventDefault(); ask(qin.value); qin.value = ""; });
   panel.querySelectorAll(".cchips button").forEach(function (b) { b.addEventListener("click", function () { ask(b.textContent); }); });
 
-  /* formulario: Formspree reenvía el email al correo del autor sin mostrarlo en la página.
-     FORM_URL tiene la forma https://formspree.io/f/XXXXXXXX y es pública por diseño. */
-  var FORM_URL = "";
+  /* formulario: Web3Forms reenvía el email al correo del autor sin mostrarlo en la página.
+     La clave es pública por diseño y está atada al dominio nazarenods.github.io. */
+  var WEB3FORMS_KEY = "52cc7d4c-3d9f-4350-93ac-ec1f826c1490";
   var f = document.getElementById("f"), ok = document.getElementById("ok"), LKEY = "lamppy-contacto", loadedAt = Date.now();
   /* limitador del lado del navegador: 1 envío cada 30 s y 3 por hora. Frena el uso torpe; el límite real lo pone Formspree. */
   function recent() { try { return JSON.parse(localStorage.getItem(LKEY) || "[]").filter(function (t) { return Date.now() - t < 3600000; }); } catch (e) { return []; } }
@@ -630,17 +630,17 @@ npm run dev</pre>
     e.preventDefault();
     var btn = f.querySelector("button[type=submit]"), email = document.getElementById("email");
     function msg(t, good) { ok.textContent = t; ok.hidden = false; ok.style.color = good ? "" : "var(--red)"; }
-    if (f.elements._gotcha.value || Date.now() - loadedAt < 2500) { msg("Gracias. Te escribimos pronto.", true); return; }
+    if (f.elements.botcheck.checked || Date.now() - loadedAt < 2500) { msg("Gracias. Te escribimos pronto.", true); return; }
     var r = recent();
     if (r.length >= 3) { msg("Ya enviaste varios mensajes. Probá de nuevo más tarde.", false); return; }
     if (r.length && Date.now() - r[r.length - 1] < 30000) { msg("Esperá unos segundos antes de volver a enviar.", false); return; }
-    if (!FORM_URL) { msg("El envío todavía no está configurado. Probá más tarde.", false); return; }
+    if (!WEB3FORMS_KEY) { msg("El envío todavía no está configurado. Probá más tarde.", false); return; }
     btn.disabled = true; btn.textContent = "Enviando…"; remember();
-    fetch(FORM_URL, {
+    fetch("https://api.web3forms.com/submit", {
       method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ email: email.value, message: "Quiere probar Lamppy.", _subject: "Nuevo contacto desde la web de Lamppy" })
-    }).then(function (res) {
-      if (!res.ok) throw new Error("no");
+      body: JSON.stringify({ access_key: WEB3FORMS_KEY, subject: "Nuevo contacto desde la web de Lamppy", from_name: "Web de Lamppy", email: email.value, message: "Quiere probar Lamppy.", botcheck: false })
+    }).then(function (res) { return res.json(); }).then(function (d) {
+      if (!d.success) throw new Error("no");
       msg("Gracias. Te escribimos pronto.", true); email.disabled = true; btn.textContent = "Enviado";
     }).catch(function () { msg("No pudimos enviar tu email. Probá de nuevo en un rato.", false); btn.disabled = false; btn.textContent = "Quiero usarla"; });
   });

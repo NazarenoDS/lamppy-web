@@ -21,22 +21,19 @@ No tiene build ni dependencias. Solo carga la tipografía Roboto desde Google Fo
 - Chat: al tocar a Lamppy se abre un input con respuestas básicas (un `switch` en el JS, sin modelo). Lamppy es gratis..
 - Final: input de email (llega por correo al autor) y el código de uso difuminado.
 
-## Configurar el envío del email
+## Envío del email
 
-El formulario del final usa [Formspree](https://formspree.io), que reenvía cada email al correo del autor sin que
-ese correo aparezca en la página ni en el repo.
+El formulario del final usa [Web3Forms](https://web3forms.com), que reenvía cada email al correo del autor sin que
+ese correo aparezca en la página ni en el repo. La clave de acceso (`WEB3FORMS_KEY`, al final de `index.html`) es pública por
+diseño y está atada al dominio `nazarenods.github.io`: **solo funciona desde ahí** (y desde `localhost` si se agregó en Web3Forms).
+Abriendo `index.html` como archivo, o desde otro dominio, el envío falla.
 
-1. En formspree.io creá una cuenta, un formulario nuevo con el correo donde querés recibir los mensajes y confirmá ese correo.
-2. Copiá la URL del formulario (`https://formspree.io/f/XXXXXXXX`) y pegala en `FORM_URL`, al final de `index.html`. Es pública por diseño.
-
-Mientras `FORM_URL` esté vacía, el formulario avisa que el envío todavía no está configurado.
-
-Limitadores: campo trampa `_gotcha` contra bots, y en el navegador 1 envío cada 30 s y 3 por hora. El límite real y el antispam
-los pone Formspree según el plan.
+Limitadores: campo trampa `botcheck` contra bots, y en el navegador 1 envío cada 30 s y 3 por hora. El límite real y el
+antispam los pone Web3Forms según el plan.
 
 ## Pendiente
 
-- Cargar `FORM_URL` de Formspree (ver arriba).
+- Publicar con GitHub Pages y probar el formulario desde `nazarenods.github.io`.
 - El código difuminado es un texto de relleno entre comillas. Reemplazarlo por los pasos reales cuando haya instaladores.
 
 ## Archivos
