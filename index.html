@@ -179,6 +179,11 @@ a { color: inherit; }
 .code .veil { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 16px; }
 .code .veil span { background: rgba(16,19,26,.85); color: #fff; font-weight: 500; font-size: 15px; padding: 9px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,.2); }
 
+/* pie */
+.foot { padding-block: 26px calc(30px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); color: var(--dim); font-size: 14px; }
+.foot .in { display: flex; justify-content: space-between; gap: 8px 20px; flex-wrap: wrap; }
+.foot a { text-decoration: none; border-bottom: 1px solid var(--line); } .foot a:hover { color: var(--fg); border-color: var(--fg); }
+
 /* la lámpara */
 .lamp { position: fixed; left: 0; top: 0; z-index: 40; width: 300px; aspect-ratio: 1; pointer-events: none; will-change: transform; }
 .lamp .rot { position: absolute; inset: 0; transform-origin: 50% 90%; }
@@ -375,6 +380,11 @@ npm run dev</pre>
       <div class="veil"><span>Ponete en contacto</span></div>
     </div>
   </div></section>
+
+  <footer class="foot w"><div class="in">
+    <span>© 2026 Lamppy. Todos los derechos reservados.</span>
+    <a href="https://github.com/NazarenoDS" target="_blank" rel="noopener">github.com/NazarenoDS</a>
+  </div></footer>
 </main>
 
 <div class="pmark" id="pmark"><em></em></div>
