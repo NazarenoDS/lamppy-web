@@ -23,23 +23,24 @@ No tiene build ni dependencias. Solo carga la tipografía Roboto desde Google Fo
 
 ## Configurar el envío del email
 
-El formulario del final manda el email a un Google Apps Script tuyo, que te lo reenvía por correo desde tu cuenta.
-Tu correo no aparece en la página ni en el repo (el script usa la cuenta que lo implementa).
+El formulario del final usa [Formspree](https://formspree.io), que reenvía cada email al correo del autor sin que
+ese correo aparezca en la página ni en el repo.
 
-1. Abrí [script.google.com](https://script.google.com), creá un proyecto y pegá `tools/apps-script-contacto.gs`.
-2. Implementar > Nueva implementación > Aplicación web. Ejecutar como: yo. Acceso: cualquier persona.
-3. Copiá la URL que termina en `/exec` y pegala en `FORM_URL` (al final de `index.html`).
+1. En formspree.io creá una cuenta, un formulario nuevo con el correo donde querés recibir los mensajes y confirmá ese correo.
+2. Copiá la URL del formulario (`https://formspree.io/f/XXXXXXXX`) y pegala en `FORM_URL`, al final de `index.html`. Es pública por diseño.
 
 Mientras `FORM_URL` esté vacía, el formulario avisa que el envío todavía no está configurado.
 
+Limitadores: campo trampa `_gotcha` contra bots, y en el navegador 1 envío cada 30 s y 3 por hora. El límite real y el antispam
+los pone Formspree según el plan.
+
 ## Pendiente
 
-- Cargar `FORM_URL` (ver arriba).
+- Cargar `FORM_URL` de Formspree (ver arriba).
 - El código difuminado es un texto de relleno entre comillas. Reemplazarlo por los pasos reales cuando haya instaladores.
 
 ## Archivos
 
 - `index.html`: toda la página (HTML, CSS y JS).
-- `tools/apps-script-contacto.gs`: el script que reenvía los emails a tu correo.
 - `assets/`: caras del personaje (copias reducidas de `lamppy/apps/desktop/assets/personaje/completo`). Se usan 7 de las 9.
 - `exploraciones/cinco-landings.html`: la primera ronda de 5 direcciones de diseño, como referencia.

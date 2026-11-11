@@ -362,7 +362,7 @@ a { color: inherit; }
     <form id="f">
       <label for="email">Tu email</label>
       <input id="email" type="email" required autocomplete="email" placeholder="vos@correo.com">
-      <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
+      <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
       <button type="submit">Quiero usarla</button>
     </form>
     <p class="ok" id="ok" hidden>Gracias. Te escribimos pronto.</p>
@@ -619,19 +619,28 @@ npm run dev</pre>
   document.getElementById("cform").addEventListener("submit", function (e) { e.preventDefault(); ask(qin.value); qin.value = ""; });
   panel.querySelectorAll(".cchips button").forEach(function (b) { b.addEventListener("click", function () { ask(b.textContent); }); });
 
-  /* formulario: manda el email a un Google Apps Script que lo reenvía al correo del autor
-     (ver tools/apps-script-contacto.gs). La URL es pública y no revela el correo. */
+  /* formulario: Formspree reenvía el email al correo del autor sin mostrarlo en la página.
+     FORM_URL tiene la forma https://formspree.io/f/XXXXXXXX y es pública por diseño. */
   var FORM_URL = "";
-  var f = document.getElementById("f"), ok = document.getElementById("ok");
+  var f = document.getElementById("f"), ok = document.getElementById("ok"), LKEY = "lamppy-contacto", loadedAt = Date.now();
+  /* limitador del lado del navegador: 1 envío cada 30 s y 3 por hora. Frena el uso torpe; el límite real lo pone Formspree. */
+  function recent() { try { return JSON.parse(localStorage.getItem(LKEY) || "[]").filter(function (t) { return Date.now() - t < 3600000; }); } catch (e) { return []; } }
+  function remember() { try { var r = recent(); r.push(Date.now()); localStorage.setItem(LKEY, JSON.stringify(r)); } catch (e) {} }
   f.addEventListener("submit", function (e) {
     e.preventDefault();
     var btn = f.querySelector("button[type=submit]"), email = document.getElementById("email");
     function msg(t, good) { ok.textContent = t; ok.hidden = false; ok.style.color = good ? "" : "var(--red)"; }
+    if (f.elements._gotcha.value || Date.now() - loadedAt < 2500) { msg("Gracias. Te escribimos pronto.", true); return; }
+    var r = recent();
+    if (r.length >= 3) { msg("Ya enviaste varios mensajes. Probá de nuevo más tarde.", false); return; }
+    if (r.length && Date.now() - r[r.length - 1] < 30000) { msg("Esperá unos segundos antes de volver a enviar.", false); return; }
     if (!FORM_URL) { msg("El envío todavía no está configurado. Probá más tarde.", false); return; }
-    btn.disabled = true; btn.textContent = "Enviando…";
-    var body = new URLSearchParams({ email: email.value, botcheck: f.elements.botcheck.checked ? "1" : "" });
-    /* no-cors: la respuesta no se puede leer, así que solo detecta fallas de red */
-    fetch(FORM_URL, { method: "POST", mode: "no-cors", body: body }).then(function () {
+    btn.disabled = true; btn.textContent = "Enviando…"; remember();
+    fetch(FORM_URL, {
+      method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ email: email.value, message: "Quiere probar Lamppy.", _subject: "Nuevo contacto desde la web de Lamppy" })
+    }).then(function (res) {
+      if (!res.ok) throw new Error("no");
       msg("Gracias. Te escribimos pronto.", true); email.disabled = true; btn.textContent = "Enviado";
     }).catch(function () { msg("No pudimos enviar tu email. Probá de nuevo en un rato.", false); btn.disabled = false; btn.textContent = "Quiero usarla"; });
   });
