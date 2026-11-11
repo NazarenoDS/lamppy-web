@@ -619,21 +619,19 @@ npm run dev</pre>
   document.getElementById("cform").addEventListener("submit", function (e) { e.preventDefault(); ask(qin.value); qin.value = ""; });
   panel.querySelectorAll(".cchips button").forEach(function (b) { b.addEventListener("click", function () { ask(b.textContent); }); });
 
-  /* formulario: Web3Forms reenvía el email al correo del autor sin mostrarlo en la página.
-     La clave de acceso es pública por diseño. Se obtiene en web3forms.com con el correo de destino. */
-  var WEB3FORMS_KEY = "";
+  /* formulario: manda el email a un Google Apps Script que lo reenvía al correo del autor
+     (ver tools/apps-script-contacto.gs). La URL es pública y no revela el correo. */
+  var FORM_URL = "";
   var f = document.getElementById("f"), ok = document.getElementById("ok");
   f.addEventListener("submit", function (e) {
     e.preventDefault();
     var btn = f.querySelector("button[type=submit]"), email = document.getElementById("email");
     function msg(t, good) { ok.textContent = t; ok.hidden = false; ok.style.color = good ? "" : "var(--red)"; }
-    if (!WEB3FORMS_KEY) { msg("El envío todavía no está configurado. Probá más tarde.", false); return; }
+    if (!FORM_URL) { msg("El envío todavía no está configurado. Probá más tarde.", false); return; }
     btn.disabled = true; btn.textContent = "Enviando…";
-    fetch("https://api.web3forms.com/submit", {
-      method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ access_key: WEB3FORMS_KEY, subject: "Nuevo contacto desde la web de Lamppy", from_name: "Web de Lamppy", email: email.value, message: "Quiere probar Lamppy.", botcheck: f.elements.botcheck.checked })
-    }).then(function (r) { return r.json(); }).then(function (d) {
-      if (!d.success) throw new Error("no");
+    var body = new URLSearchParams({ email: email.value, botcheck: f.elements.botcheck.checked ? "1" : "" });
+    /* no-cors: la respuesta no se puede leer, así que solo detecta fallas de red */
+    fetch(FORM_URL, { method: "POST", mode: "no-cors", body: body }).then(function () {
       msg("Gracias. Te escribimos pronto.", true); email.disabled = true; btn.textContent = "Enviado";
     }).catch(function () { msg("No pudimos enviar tu email. Probá de nuevo en un rato.", false); btn.disabled = false; btn.textContent = "Quiero usarla"; });
   });

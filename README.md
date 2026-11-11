@@ -23,21 +23,23 @@ No tiene build ni dependencias. Solo carga la tipografía Roboto desde Google Fo
 
 ## Configurar el envío del email
 
-El formulario del final usa [Web3Forms](https://web3forms.com), que reenvía cada email al correo del autor sin que
-ese correo aparezca en la página ni en el repo.
+El formulario del final manda el email a un Google Apps Script tuyo, que te lo reenvía por correo desde tu cuenta.
+Tu correo no aparece en la página ni en el repo (el script usa la cuenta que lo implementa).
 
-1. En web3forms.com pedí una clave de acceso con el correo donde querés recibir los mensajes.
-2. Pegala en `WEB3FORMS_KEY` (al final de `index.html`). La clave es pública por diseño, no revela el correo.
+1. Abrí [script.google.com](https://script.google.com), creá un proyecto y pegá `tools/apps-script-contacto.gs`.
+2. Implementar > Nueva implementación > Aplicación web. Ejecutar como: yo. Acceso: cualquier persona.
+3. Copiá la URL que termina en `/exec` y pegala en `FORM_URL` (al final de `index.html`).
 
-Mientras la clave esté vacía, el formulario avisa que el envío todavía no está configurado.
+Mientras `FORM_URL` esté vacía, el formulario avisa que el envío todavía no está configurado.
 
 ## Pendiente
 
-- Cargar la clave de Web3Forms (ver arriba).
+- Cargar `FORM_URL` (ver arriba).
 - El código difuminado es un texto de relleno entre comillas. Reemplazarlo por los pasos reales cuando haya instaladores.
 
 ## Archivos
 
 - `index.html`: toda la página (HTML, CSS y JS).
+- `tools/apps-script-contacto.gs`: el script que reenvía los emails a tu correo.
 - `assets/`: caras del personaje (copias reducidas de `lamppy/apps/desktop/assets/personaje/completo`). Se usan 7 de las 9.
 - `exploraciones/cinco-landings.html`: la primera ronda de 5 direcciones de diseño, como referencia.
