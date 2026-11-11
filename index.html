@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lamppy</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* Recorrido: Lamppy camina por la página, esquiva el texto, se acerca y se aleja según lo que explica.
+   Paleta de cuatro colores de la rosca de la lámpara: azul, rojo, amarillo, verde. */
+:root {
+  --blue: #1a73e8; --red: #ea4335; --yellow: #fbbc04; --green: #34a853; --yellow-ink: #b06000;
+  --bg: #ffffff; --fg: #202124; --dim: #5f6368; --line: #dadce0; --card: #ffffff; --soft: #f8f9fa;
+  --accent: #1a73e8; --on-accent: #ffffff; --mark: #ea4335;
+  --gl: max(16px, env(safe-area-inset-left, 0px)); --gr: max(16px, env(safe-area-inset-right, 0px));
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --blue: #8ab4f8; --red: #f28b82; --yellow: #fdd663; --green: #81c995; --yellow-ink: #fdd663;
+  --bg: #202124; --fg: #e8eaed; --dim: #9aa0a6; --line: #3c4043; --card: #292a2d; --soft: #28292c; --accent: #8ab4f8; --on-accent: #202124; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --blue: #8ab4f8; --red: #f28b82; --yellow: #fdd663; --green: #81c995; --yellow-ink: #fdd663;
+  --bg: #202124; --fg: #e8eaed; --dim: #9aa0a6; --line: #3c4043; --card: #292a2d; --soft: #28292c; --accent: #8ab4f8; --on-accent: #202124; color-scheme: dark; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 17px/1.6 "Google Sans", "Google Sans Text", Roboto, system-ui, -apple-system, "Segoe UI", sans-serif; }
+h1, h2, h3, p { margin: 0; } h1, h2, h3 { line-height: 1.14; text-wrap: balance; letter-spacing: -.015em; font-weight: 500; }
+img { max-width: 100%; display: block; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+.w { padding-inline: var(--gl) var(--gr); }
+.in { max-width: 1080px; margin: 0 auto; }
+
+/* barra */
+.top { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding-block: 14px; }
+.logo { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 500; }
+.dots { display: flex; gap: 3px; } .dots i { width: 8px; height: 8px; border-radius: 50%; display: block; }
+.dots i:nth-child(1) { background: var(--blue); } .dots i:nth-child(2) { background: var(--red); } .dots i:nth-child(3) { background: var(--yellow); } .dots i:nth-child(4) { background: var(--green); }
+.top nav { display: flex; gap: 18px; font-size: 15px; color: var(--dim); }
+.top nav a { text-decoration: none; } .top nav a:hover { color: var(--fg); }
+
+/* hero */
+.hero { min-height: 84vh; padding-block: 8vh 6vh; display: flex; align-items: center; }
+.hero .in { width: 100%; }
+.hero h1 { font-size: clamp(36px, 6vw, 66px); max-width: 15ch; font-weight: 500; }
+.hero h1 u { text-decoration: none; background: linear-gradient(90deg, var(--blue) 0 25%, var(--red) 25% 50%, var(--yellow) 50% 75%, var(--green) 75%) left bottom / 100% 6px no-repeat; padding-bottom: 6px; }
+.hero p.lead { font-size: 20px; color: var(--dim); max-width: 38ch; margin: 20px 0 24px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 4px 14px; font-size: 15px; }
+.chip.soon { border-style: dashed; color: var(--dim); }
+.hint { margin-top: 26px; font-size: 15px; color: var(--dim); }
+
+/* recorrido */
+.route { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 40px; padding-block: 24px 60px; align-items: start; }
+.stations { display: grid; }
+.st { --c: var(--blue); --oc: #fff; min-height: 80vh; display: flex; flex-direction: column; justify-content: center; gap: 10px; padding-left: 38px; position: relative; }
+.st:nth-child(5n+2) { --c: var(--red); } .st:nth-child(5n+3) { --c: var(--yellow); --oc: #3c2a00; } .st:nth-child(5n+4) { --c: var(--green); }
+.st::before { content: ""; position: absolute; left: 11px; top: 0; bottom: 0; width: 2px; background: var(--line); }
+.st:first-child::before { top: 50%; } .st:last-child::before { bottom: 50%; }
+.st::after { content: attr(data-n); position: absolute; left: 0; top: 50%; translate: 0 -50%; width: 24px; height: 24px; border-radius: 50%; background: var(--bg); border: 2px solid var(--line); font-size: 12px; font-weight: 700; display: grid; place-items: center; color: var(--dim); transition: .3s; }
+.st.on::after { background: var(--c); border-color: var(--c); color: var(--oc); scale: 1.2; }
+.st h2 { font-size: clamp(26px, 3.4vw, 38px); }
+.st p { color: var(--dim); max-width: 40ch; }
+.tag { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--c, var(--blue)); }
+.st:nth-child(5n+3) .tag { color: var(--yellow-ink); }
+.st .no { font-weight: 500; color: var(--fg); }
+.stick { position: sticky; top: 24px; }
+.never { margin-top: 12px; font-size: 14px; color: var(--dim); }
+
+/* ventanas de ejemplo (siempre claras, como un programa real) */
+.mock { --win: #e9ecf2; position: relative; border-radius: 14px; overflow: hidden; aspect-ratio: 16 / 11; background: var(--win); color: #20242d; border: 1px solid var(--line); box-shadow: 0 24px 60px -28px rgba(0,0,0,.45); font-size: 13px; line-height: 1.4; }
+.mock .bar, .mini .tb { height: 30px; background: #d3d8e2; display: flex; align-items: center; gap: 6px; padding: 0 12px; font-size: 12px; color: #4b5363; }
+.mock .bar i, .mini .tb i { width: 10px; height: 10px; border-radius: 50%; background: #aab2c2; }
+.mock .bar span, .mini .tb span { margin-left: 8px; }
+.mock .menu { height: 30px; display: flex; align-items: center; gap: 16px; padding: 0 14px; background: #eef0f5; border-bottom: 1px solid #d3d8e2; font-size: 12.5px; }
+.mock .tools { position: absolute; left: 0; top: 60px; bottom: 0; width: 52px; background: #dfe3ec; display: flex; flex-direction: column; gap: 10px; align-items: center; padding-top: 14px; }
+.mock .tool { width: 30px; height: 30px; border-radius: 7px; background: #c5ccdb; display: grid; place-items: center; color: #5b6578; position: relative; }
+.mock .canvas { position: absolute; left: 52px; right: 0; top: 60px; bottom: 0; background: #f6f7fa; display: grid; place-items: center; }
+.mock .photo { position: relative; width: 56%; aspect-ratio: 4 / 3; border-radius: 6px; background: linear-gradient(160deg, #7fb2e8 0 46%, #5d9a6a 46% 100%); box-shadow: 0 6px 20px rgba(0,0,0,.2); }
+.mock .photo::after { content: ""; position: absolute; width: 18%; aspect-ratio: 1; border-radius: 50%; background: #ffe08a; top: 12%; right: 14%; }
+.mark { position: absolute; border: 3px solid var(--mark); border-radius: 9px; opacity: 0; scale: .8; transition: opacity .35s, scale .35s; pointer-events: none; z-index: 2; }
+.mark::after, .pmark::after { content: ""; position: absolute; inset: -8px; border-radius: 13px; border: 2px solid var(--mark); animation: ping 1.6s ease-out infinite; }
+.mark em { position: absolute; left: 0; top: calc(100% + 8px); font-style: normal; font-size: 11.5px; font-weight: 700; background: var(--mark); color: #fff; padding: 2px 8px; border-radius: 6px; white-space: nowrap; }
+.mark.tl { inset: -4px; } .mark.ph { inset: 18% 16% 20% 22%; } .mark.ph em { top: auto; bottom: calc(100% + 8px); }
+@keyframes ping { from { transform: scale(.92); opacity: .9; } to { transform: scale(1.22); opacity: 0; } }
+.mock[data-s="senala"] .mark.tl, .mock[data-s="haces"] .mark.ph { opacity: 1; scale: 1; }
+.ask { position: absolute; left: 66px; right: 14px; top: 40px; background: #fff; border-radius: 12px; padding: 9px 13px; box-shadow: 0 8px 24px rgba(20,25,40,.22); opacity: 0; translate: 0 -8px; transition: .35s; z-index: 3; display: flex; gap: 8px; align-items: center; }
+.ask::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--red); flex: none; }
+.ask span { overflow: hidden; white-space: nowrap; border-right: 2px solid #20242d; width: 0; }
+.mock[data-s="pedir"] .ask { opacity: 1; translate: 0 0; }
+.mock[data-s="pedir"] .ask span { animation: type 2.2s steps(26) .3s forwards, caret .7s step-end infinite; }
+@keyframes type { to { width: 26ch; } } @keyframes caret { 50% { border-color: transparent; } }
+.scan { position: absolute; left: 0; right: 0; top: 60px; height: 3px; background: linear-gradient(90deg, transparent, var(--blue), transparent); box-shadow: 0 0 18px 6px color-mix(in srgb, var(--blue) 40%, transparent); opacity: 0; z-index: 2; }
+.mock[data-s="mira"] .scan { opacity: 1; animation: scan 2.4s ease-in-out infinite; }
+@keyframes scan { from { top: 60px; } 50% { top: calc(100% - 4px); } to { top: 60px; } }
+.card { position: absolute; right: 12px; top: 40px; width: min(200px, 44%); background: #fff; border-radius: 12px; padding: 11px 13px; box-shadow: 0 10px 28px rgba(20,25,40,.25); opacity: 0; translate: 10px 0; transition: .35s; z-index: 3; }
+.card h4 { margin: 0 0 6px; font-size: 12.5px; } .card ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; font-size: 12px; }
+.card li { color: #8a93a5; text-decoration: line-through; } .card li::before { content: "✓ "; }
+.card li.now { color: #20242d; text-decoration: none; font-weight: 700; } .card li.now::before { content: "→ "; }
+.card li.todo { text-decoration: none; opacity: .5; } .card li.todo::before { content: "· "; }
+.mock[data-s="senala"] .card, .mock[data-s="haces"] .card, .mock[data-s="listo"] .card { opacity: 1; translate: 0 0; }
+.done { position: absolute; inset: 60px 0 0 52px; display: grid; place-items: center; background: rgba(246,247,250,.7); opacity: 0; transition: .4s; z-index: 4; font-weight: 700; font-size: 15px; pointer-events: none; }
+.mock[data-s="listo"] .done { opacity: 1; }
+.done span { background: #fff; padding: 8px 16px; border-radius: 999px; box-shadow: 0 6px 18px rgba(20,25,40,.2); }
+
+/* ejemplos cotidianos */
+.exs { padding-block: 40px 20px; border-top: 1px solid var(--line); }
+.exs > .in > h2 { font-size: clamp(28px, 4vw, 44px); max-width: 18ch; margin-bottom: 8px; }
+.exs > .in > .sub { color: var(--dim); max-width: 52ch; }
+.ex { --c: var(--blue); min-height: 78vh; display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 40px; align-items: center; padding-block: 40px; }
+.ex.e2 { --c: var(--red); } .ex.e3 { --c: var(--green); }
+.ex .ex-t { display: grid; gap: 12px; }
+.ex h3 { font-size: clamp(22px, 2.8vw, 30px); max-width: 22ch; }
+.steps-l { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 6px; }
+.steps-l li { display: flex; gap: 10px; align-items: center; color: var(--dim); padding: 4px 0; transition: color .3s; }
+.steps-l li::before { content: attr(data-n); width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; font-size: 12px; font-weight: 700; flex: none; transition: .3s; }
+.steps-l li.now { color: var(--fg); font-weight: 500; }
+.steps-l li.now::before { background: var(--c); border-color: var(--c); color: #fff; }
+.mini { aspect-ratio: 16 / 10; }
+.mini .ln { height: 8px; border-radius: 4px; background: #d6dae3; } .mini .ln.s { width: 60%; }
+/* correo */
+.mail { position: absolute; inset: 30px 0 0; display: grid; grid-template-columns: 26% 1fr; background: #fff; }
+.mail aside { background: #f1f3f4; padding: 14px 12px; display: grid; gap: 10px; align-content: start; }
+.b-new { background: #c2e7ff; color: #001d35; font-weight: 700; border-radius: 14px; padding: 9px 12px; width: fit-content; }
+.comp { padding: 14px 18px; display: grid; gap: 8px; align-content: start; }
+.row { display: flex; gap: 10px; border-bottom: 1px solid #e3e5e8; padding: 5px 0; } .row span { color: #6b7280; width: 52px; } .row u { text-decoration: none; }
+.comp .body { display: grid; gap: 8px; padding-block: 8px; }
+.acts { display: flex; gap: 10px; align-items: center; }
+.b-send { background: #1a73e8; color: #fff; font-weight: 700; padding: 8px 18px; border-radius: 18px; }
+.b-attach { border: 1px solid #c4c7cc; padding: 7px 14px; border-radius: 18px; color: #3c4043; }
+/* navegador */
+.navb { position: absolute; inset: 30px 0 auto; height: 42px; background: #f1f3f4; display: flex; gap: 10px; align-items: center; padding: 0 12px; }
+.back, .fwd { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: #e3e5e8; color: #3c4043; flex: none; }
+.addr { flex: 1; background: #fff; border-radius: 16px; padding: 5px 14px; color: #6b7280; border: 1px solid #dadce0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wp { position: absolute; inset: 72px 0 0; background: #fff; padding: 18px 8%; display: grid; gap: 10px; align-content: start; }
+.search { border: 1px solid #dadce0; border-radius: 22px; padding: 9px 18px; color: #6b7280; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+.res { display: grid; gap: 1px; } .res b { color: #1a0dab; font-weight: 500; } .res small { color: #188038; }
+/* programa nuevo */
+.menu2 { position: absolute; inset: 30px 0 auto; height: 30px; background: #eef0f5; display: flex; align-items: center; gap: 16px; padding: 0 14px; }
+.icons { position: absolute; inset: 60px 0 auto; height: 38px; background: #f6f7fa; border-bottom: 1px solid #d3d8e2; display: flex; align-items: center; gap: 8px; padding: 0 12px; }
+.icons div { min-width: 28px; height: 26px; border-radius: 6px; background: #e0e4ec; display: grid; place-items: center; color: #4b5363; padding: 0 8px; }
+.icons .m-save { margin-left: auto; background: #34a853; color: #fff; font-weight: 700; }
+.cells { position: absolute; inset: 98px 0 0; background: #fff; display: grid; grid-template-columns: 38px repeat(4, 1fr); grid-auto-rows: 26px; align-content: start; }
+.cells span { border: 0 solid #e3e5e8; border-width: 0 1px 1px 0; padding: 3px 8px; font-size: 12px; color: #3c4043; }
+.cells .h { background: #f1f3f4; color: #6b7280; text-align: center; }
+
+/* secciones sueltas */
+.blk { padding-block: 72px; border-top: 1px solid var(--line); }
+.blk h2 { font-size: clamp(26px, 3.6vw, 40px); max-width: 20ch; margin-bottom: 10px; }
+.blk .sub { color: var(--dim); max-width: 56ch; margin-bottom: 26px; }
+.plat { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.plat > div { background: var(--soft); border-radius: 12px; padding: 18px; display: grid; gap: 4px; }
+.plat > div:nth-child(1) .status { background: var(--blue); } .plat > div:nth-child(2) .status { background: var(--red); } .plat > div:nth-child(3) .status { background: var(--green); }
+.plat b { font-size: 19px; font-weight: 500; } .plat span:not(.status) { color: var(--dim); font-size: 15px; }
+.phones { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+.phones > div { border: 1px dashed var(--dim); border-radius: 12px; padding: 18px; display: grid; gap: 4px; }
+.phones b { font-weight: 500; font-size: 19px; } .phones span:not(.status) { color: var(--dim); font-size: 15px; }
+.status { display: inline-block; width: fit-content; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 2px 9px; border-radius: 999px; background: var(--blue); color: #fff; }
+:root[data-theme="dark"] .status { color: #202124; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .status { color: #202124; } }
+.status.next { background: transparent; color: var(--dim) !important; border: 1px solid var(--dim); }
+.priv { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.priv ul { margin: 0; padding-left: 18px; color: var(--dim); display: grid; gap: 6px; }
+.priv h3 { font-size: 19px; margin-bottom: 8px; }
+
+/* final */
+.end { padding-block: 90px 120px; border-top: 1px solid var(--line); background: var(--soft); }
+.end h2 { font-size: clamp(30px, 4.4vw, 50px); max-width: 16ch; margin-bottom: 10px; }
+.end .sub { color: var(--dim); max-width: 46ch; margin-bottom: 24px; }
+.end form { display: flex; gap: 10px; flex-wrap: wrap; max-width: 520px; }
+.end label { flex-basis: 100%; font-size: 14px; font-weight: 500; }
+.end input { flex: 1 1 240px; min-width: 0; font: inherit; padding: 13px 16px; border-radius: 10px; border: 2px solid var(--line); background: var(--card); color: var(--fg); }
+.end input:focus { border-color: var(--blue); outline: none; }
+.end button { font: inherit; font-weight: 500; border: 0; border-radius: 10px; padding: 13px 22px; background: var(--accent); color: var(--on-accent); cursor: pointer; }
+.end .ok { margin-top: 14px; font-weight: 500; }
+.code { position: relative; margin-top: 34px; max-width: 640px; border-radius: 14px; overflow: hidden; background: #10131a; }
+.code pre { margin: 0; padding: 22px 24px; color: #e6edff; font: 14px/1.8 ui-monospace, Menlo, Consolas, monospace; filter: blur(7px); user-select: none; overflow: hidden; }
+.code .veil { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 16px; }
+.code .veil span { background: rgba(16,19,26,.85); color: #fff; font-weight: 500; font-size: 15px; padding: 9px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,.2); }
+
+/* la lámpara */
+.lamp { position: fixed; left: 0; top: 0; z-index: 40; width: 300px; aspect-ratio: 1; pointer-events: none; will-change: transform; }
+.lamp .rot { position: absolute; inset: 0; transform-origin: 50% 90%; }
+.lamp img { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; scale: .85; transition: opacity .3s, scale .45s cubic-bezier(.3,1.5,.5,1); filter: drop-shadow(0 8px 14px rgba(0,0,0,.28)); }
+.lamp img.cur { opacity: 1; scale: 1; }
+.lamp .bob { position: absolute; inset: 0; animation: bob 4s ease-in-out infinite; }
+.lamp[data-f="sorprendido"] .bob { animation: hop 1.2s ease-in-out infinite; }
+.lamp[data-f="dormido"] .bob { animation: sway 4.5s ease-in-out infinite; }
+.lamp[data-f="confundido"] .bob { animation: wob 2.4s ease-in-out infinite; }
+.lamp[data-f="agradecido"] .bob, .lamp[data-f="alegre"] .bob { animation: bob 2.4s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(-6px); } }
+@keyframes hop { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-16px); } }
+@keyframes sway { 50% { transform: rotate(5deg) translateY(2px); } }
+@keyframes wob { 25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); } }
+.say { position: absolute; bottom: calc(100% + 2px); width: max-content; max-width: min(260px, calc(100vw - 32px)); background: var(--card); color: var(--fg); border: 1px solid var(--line); border-radius: 16px; padding: 9px 14px; font-size: 15px; line-height: 1.4; box-shadow: 0 10px 30px rgba(0,0,0,.18); transition: opacity .25s, translate .25s; }
+.say.a-l { left: 0; } .say.a-r { right: 0; } .say.below { bottom: auto; top: calc(100% + 2px); }
+.say.swap { opacity: 0; translate: 0 6px; }
+.pmark { position: fixed; z-index: 35; border: 3px solid var(--mark); border-radius: 12px; opacity: 0; transition: opacity .3s; pointer-events: none; }
+.pmark.on { opacity: 1; }
+.pmark em { position: absolute; right: 0; bottom: calc(100% + 6px); font-style: normal; font-size: 12px; font-weight: 700; background: var(--mark); color: #fff; padding: 2px 9px; border-radius: 6px; white-space: nowrap; }
+:root[data-theme="dark"] .pmark em { color: #202124; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pmark em { color: #202124; } }
+
+/* mini acción: tocar a Lamppy abre un chat con respuestas básicas */
+.lamp .hit { position: absolute; inset: 10%; border: 0; border-radius: 50%; background: transparent; padding: 0; pointer-events: auto; cursor: pointer; }
+.lamp .hit:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+.lamp .bob { transition: scale .2s; }
+.lamp:has(.hit:hover) .bob { scale: 1.07; }
+.say.off { display: none; }
+.chat { position: fixed; z-index: 45; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(150px + env(safe-area-inset-bottom, 0px)); width: min(360px, calc(100vw - 32px)); max-height: min(64vh, 500px); display: flex; flex-direction: column; background: var(--card); color: var(--fg); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 18px 50px rgba(0,0,0,.28); overflow: hidden; }
+.chat[hidden] { display: none; }
+.ch { display: flex; justify-content: space-between; align-items: center; padding: 8px 8px 8px 14px; border-bottom: 1px solid var(--line); }
+.ch b { font-weight: 500; display: flex; align-items: center; gap: 8px; }
+.ch button { background: none; border: 0; font-size: 24px; line-height: 1; color: var(--dim); cursor: pointer; padding: 2px 8px; }
+.clog { padding: 12px 14px; overflow-y: auto; display: grid; gap: 8px; align-content: start; flex: 1; min-height: 90px; }
+.m { max-width: 88%; padding: 8px 12px; border-radius: 14px; font-size: 15px; line-height: 1.45; }
+.m.l { background: var(--soft); justify-self: start; border-bottom-left-radius: 4px; }
+.m.u { background: var(--accent); color: var(--on-accent); justify-self: end; border-bottom-right-radius: 4px; }
+.m.t { color: var(--dim); }
+.m button { display: block; margin-top: 8px; font: inherit; font-size: 14px; font-weight: 500; border: 1px solid var(--blue); color: var(--blue); background: transparent; border-radius: 999px; padding: 3px 12px; cursor: pointer; }
+.cchips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 10px; }
+.cchips button { font: inherit; font-size: 13px; border: 1px solid var(--line); background: var(--card); color: var(--fg); border-radius: 999px; padding: 3px 11px; cursor: pointer; }
+.cchips button:hover { border-color: var(--blue); }
+#cform { display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--line); }
+#cform input { flex: 1; min-width: 0; font: inherit; font-size: 15px; padding: 9px 12px; border-radius: 10px; border: 2px solid var(--line); background: var(--bg); color: var(--fg); }
+#cform input:focus { border-color: var(--blue); outline: none; }
+#cform button { font: inherit; font-weight: 500; border: 0; border-radius: 10px; padding: 9px 16px; background: var(--accent); color: var(--on-accent); cursor: pointer; }
+
+@media (max-width: 899px) {
+  .chat { bottom: calc(112px + env(safe-area-inset-bottom, 0px)); }
+  .route, .ex { grid-template-columns: 1fr; gap: 0; }
+  .route { padding-top: 0; }
+  .stick { position: sticky; top: 0; z-index: 30; order: -1; padding: 10px 0; background: var(--bg); }
+  .mock:not(.mini) { aspect-ratio: auto; height: 36vh; min-height: 230px; }
+  .mock .card { display: none; }
+  .st { min-height: 62vh; }
+  .ex { min-height: 70vh; gap: 22px; }
+  .hero { min-height: 74vh; align-items: flex-start; }
+  .plat, .phones, .priv { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { .mark::after, .pmark::after, .lamp .bob { animation: none !important; } html { scroll-behavior: auto; } .mock[data-s="pedir"] .ask span { animation: none; width: 26ch; } }
+</style>
+
+<main>
+  <header class="top w"><div class="in" style="display:flex;justify-content:space-between;width:100%;align-items:center">
+    <div class="logo"><span class="dots"><i></i><i></i><i></i><i></i></span>Lamppy</div>
+    <nav><a href="#ruta">Cómo funciona</a><a href="#ejemplos">Ejemplos</a><a href="#donde">Dónde funciona</a><a href="#usar">Probala</a></nav>
+  </div></header>
+
+  <section class="hero w" data-face="alegre" data-big data-size="hero" data-say="¡Hola! Soy Lamppy. Tocame y preguntame lo que quieras, o bajá y mirá cómo funciono." id="hola"><div class="in">
+    <h1>Te enseña a usar <u>cualquier programa.</u></h1>
+    <p class="lead">Lamppy es una lámpara que flota sobre tu pantalla. Le pedís una tarea, te marca dónde hacer clic y te explica cada paso.</p>
+    <div class="chips"><span class="chip">Windows</span><span class="chip">macOS</span><span class="chip">Linux</span><span class="chip soon">Celulares, próximamente</span></div>
+    <p class="hint">Bajá y mirá cómo funciona. Voy con vos. O tocame y preguntame.</p>
+  </div></section>
+
+  <div class="w" id="ruta"><div class="in route">
+    <div class="stations">
+      <section class="st" data-n="1" data-s="pedir" data-point="#mock .ask" data-side="below" data-size="mid" data-face="neutral" data-say="Te escucho. Mantenéme apretada y hablá, o escribí lo que necesitás.">
+        <span class="tag">Pedís</span><h2>Le decís qué querés hacer.</h2>
+        <p>Con la voz o escribiendo, en español y con tus palabras. «¿Cómo recorto esta foto?»</p>
+      </section>
+      <section class="st" data-n="2" data-s="mira" data-point="#mock .photo" data-side="left" data-size="far" data-face="pensativo" data-say="Mmm, a ver qué programa tenés abierto y dónde está cada cosa...">
+        <span class="tag">Mira</span><h2>Mira tu pantalla.</h2>
+        <p>Ve el programa que estás usando, solo mientras hay un pedido en curso.</p>
+      </section>
+      <section class="st" data-n="3" data-s="senala" data-point="#mock .t2" data-side="right" data-size="near" data-face="alegre" data-say="¡Ahí está! Es esa herramienta, la que parece dos esquinas.">
+        <span class="tag">Señala</span><h2>Te marca dónde ir.</h2>
+        <p>Dibuja una marca sobre el botón, el menú o el campo, y te lo explica en voz alta y en un globo.</p>
+      </section>
+      <section class="st" data-n="4" data-s="haces" data-point="#mock .photo" data-side="right" data-size="mid" data-face="neutral" data-say="Ahora hacelo vos. Arrastrá sobre la foto y yo te espero.">
+        <span class="tag">Hacés</span><h2>Los pasos los das vos.</h2>
+        <p>Una tarjeta lleva la cuenta y tacha lo que ya hiciste. Lamppy <span class="no">nunca hace clic, escribe ni automatiza</span> por vos.</p>
+      </section>
+      <section class="st" data-n="5" data-s="listo" data-point="#mock .done span" data-side="left" data-size="near" data-face="agradecido" data-say="¡Listo! Lo hiciste vos, y ahora ya sabés cómo.">
+        <span class="tag">Listo</span><h2>Aprendiste a hacerlo.</h2>
+        <p>La próxima vez no necesitás ayuda. Eso es lo que Lamppy busca.</p>
+      </section>
+    </div>
+    <div class="stick"><div class="mock" id="mock" data-s="pedir" aria-label="Demostración de Lamppy en un editor de imágenes">
+      <div class="bar"><i></i><i></i><i></i><span>foto-playa.png · Editor de imágenes</span></div>
+      <div class="menu"><span>Archivo</span><span>Editar</span><span>Imagen</span><span>Herramientas</span></div>
+      <div class="tools"><div class="tool">✥</div><div class="tool t2">▭<div class="mark tl"><em>Recortar</em></div></div><div class="tool">✎</div><div class="tool">◐</div></div>
+      <div class="canvas"><div class="photo"><div class="mark ph"><em>Arrastrá acá</em></div></div></div>
+      <div class="ask"><span>¿Cómo recorto esta foto?</span></div>
+      <div class="scan"></div>
+      <div class="card"><h4>Recortar una foto</h4><ol id="steps"></ol></div>
+      <div class="done"><span>✓ Tarea completada</span></div>
+    </div><p class="never">Demostración. Así se ve Lamppy sobre un programa real.</p></div>
+  </div></div>
+
+  <section class="exs w" id="ejemplos"><div class="in">
+    <h2>Pedile lo de todos los días.</h2>
+    <p class="sub">Tres cosas que cualquiera necesita alguna vez. Mirá cómo te las muestra, un paso a la vez.</p>
+
+    <div class="ex" id="ex-mail" data-ex="mail" data-face="alegre">
+      <div class="ex-t"><span class="tag" style="color:var(--blue)">Mandar un email</span><h3>«¿Cómo le mando un email a mi profe con un archivo?»</h3><ol class="steps-l"></ol></div>
+      <div class="mock mini" aria-label="Ejemplo: mandar un email">
+        <div class="tb"><i></i><i></i><i></i><span>Correo</span></div>
+        <div class="mail">
+          <aside><div class="b-new">Redactar</div><div class="ln"></div><div class="ln"></div><div class="ln s"></div></aside>
+          <div class="comp">
+            <div class="row f-to"><span>Para</span><u>profe@escuela.edu</u></div>
+            <div class="row"><span>Asunto</span><u>Tarea de historia</u></div>
+            <div class="body"><div class="ln"></div><div class="ln"></div><div class="ln s"></div></div>
+            <div class="acts"><div class="b-send">Enviar</div><div class="b-attach">Adjuntar</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ex e2" id="ex-web" data-ex="web" data-face="neutral">
+      <div class="ex-t"><span class="tag" style="color:var(--red)">Navegar en internet</span><h3>«No sé cómo buscar una receta en internet.»</h3><ol class="steps-l"></ol></div>
+      <div class="mock mini" aria-label="Ejemplo: navegar en internet">
+        <div class="tb"><i></i><i></i><i></i><span>Navegador</span></div>
+        <div class="navb"><span class="back">←</span><span class="fwd">→</span><div class="addr">Buscar o escribir una dirección</div></div>
+        <div class="wp"><div class="search">receta de tortilla de papas</div>
+          <div class="res res1"><b>Tortilla de papas, paso a paso</b><small>www.recetas-ejemplo.com</small></div>
+          <div class="res"><b>La mejor tortilla española</b><small>www.cocina-ejemplo.com</small></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ex e3" id="ex-app" data-ex="app" data-face="neutral">
+      <div class="ex-t"><span class="tag" style="color:var(--green)">Usar un programa nuevo</span><h3>«Me instalaron una planilla y no sé por dónde empezar.»</h3><ol class="steps-l"></ol></div>
+      <div class="mock mini" aria-label="Ejemplo: usar un programa nuevo">
+        <div class="tb"><i></i><i></i><i></i><span>Planilla sin título</span></div>
+        <div class="menu2"><span class="m-file">Archivo</span><span>Editar</span><span>Insertar</span><span>Formato</span></div>
+        <div class="icons"><div class="m-tool">∑</div><div><b>B</b></div><div>%</div><div class="m-save">Guardar</div></div>
+        <div class="cells"><span class="h"></span><span class="h">A</span><span class="h">B</span><span class="h">C</span><span class="h">D</span><span class="h">1</span><span>Gasto</span><span>Monto</span><span></span><span></span><span class="h">2</span><span>Luz</span><span>12000</span><span></span><span></span><span class="h">3</span><span>Agua</span><span>5400</span><span></span><span></span></div>
+      </div>
+    </div>
+  </div></section>
+
+  <section class="blk w" id="donde" data-face="sorprendido" data-point="#phones" data-side="above" data-size="far" data-mark="Próximamente" data-say="Hoy estoy en computadoras. Los celulares vienen después."><div class="in">
+    <h2>Dónde funciona</h2>
+    <p class="sub">Lamppy enseña tutoriales en escritorio, y la idea es llegar también al teléfono.</p>
+    <div class="plat">
+      <div><span class="status">Escritorio</span><b>Windows</b><span>Tutoriales sobre tus programas.</span></div>
+      <div><span class="status">Escritorio</span><b>macOS</b><span>Tutoriales sobre tus programas.</span></div>
+      <div><span class="status">Escritorio</span><b>Linux</b><span>Tutoriales sobre tus programas.</span></div>
+    </div>
+    <div class="phones" id="phones">
+      <div><span class="status next">Próximamente</span><b>Android</b><span>Lamppy en tu celular.</span></div>
+      <div><span class="status next">Próximamente</span><b>iPhone</b><span>Lamppy en tu celular.</span></div>
+    </div>
+  </div></section>
+
+  <section class="blk w" id="privacidad" data-face="neutral" data-point="#nosave" data-side="above" data-size="mid" data-mark="No se guarda" data-say="Solo miro y escucho cuando me lo pedís. Y no guardo nada."><div class="in">
+    <h2>Qué sale de tu equipo</h2>
+    <p class="sub">Lamppy no tiene cuentas, telemetría ni servidores propios. Usa el modelo de Google (Gemini) con tu propia clave.</p>
+    <div class="priv">
+      <div><h3>Se envía, solo cuando lo pedís</h3><ul><li>Imágenes de tu pantalla, con un pedido en curso</li><li>Tu voz, mientras mantenés apretada la lámpara</li><li>El texto que escribís y enviás</li></ul></div>
+      <div id="nosave"><h3>No se guarda</h3><ul><li>Tu pantalla, tu voz y tu texto</li><li>No hay telemetría ni cuentas</li><li>Se duerme sola a los 5 minutos sin actividad</li></ul></div>
+    </div>
+  </div></section>
+
+  <section class="end w" id="usar" data-face="alegre" data-point="#email" data-side="left" data-size="near" data-mark="Tu email" data-say="¡Acá podés usarme! Dejá tu email y nos ponemos en contacto."><div class="in">
+    <h2>Ya se puede usar.</h2>
+    <p class="sub">Dejanos tu email y nos ponemos en contacto para darte acceso.</p>
+    <form id="f">
+      <label for="email">Tu email</label>
+      <input id="email" type="email" required autocomplete="email" placeholder="vos@correo.com">
+      <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
+      <button type="submit">Quiero usarla</button>
+    </form>
+    <p class="ok" id="ok" hidden>Gracias. Te escribimos pronto.</p>
+    <div class="code" aria-hidden="true">
+<pre>git clone "mandá el correo" lamppy
+cd lamppy
+npm install
+cp .env.example .env
+npm run dev</pre>
+      <div class="veil"><span>Se desbloquea al dejar tu email</span></div>
+    </div>
+  </div></section>
+</main>
+
+<div class="pmark" id="pmark"><em></em></div>
+<div class="lamp" id="lamp" data-f="alegre" aria-live="polite">
+  <div class="rot"><div class="bob">
+    <img data-f="alegre" class="cur" src="assets/alegre.png" alt="Lamppy" width="420" height="420">
+    <img data-f="neutral" src="assets/neutral.png" alt="" width="420" height="420">
+    <img data-f="pensativo" src="assets/pensativo.png" alt="" width="420" height="420">
+    <img data-f="sorprendido" src="assets/sorprendido.png" alt="" width="420" height="420">
+    <img data-f="agradecido" src="assets/agradecido.png" alt="" width="420" height="420">
+    <img data-f="confundido" src="assets/confundido.png" alt="" width="420" height="420">
+    <img data-f="dormido" src="assets/dormido.png" alt="" width="420" height="420">
+  </div></div>
+  <button class="hit" id="hit" type="button" aria-label="Hablar con Lamppy" aria-expanded="false"></button>
+  <div class="say" id="say">¡Hola! Soy Lamppy. Tocame y preguntame lo que quieras, o bajá y mirá cómo funciono.</div>
+</div>
+
+<div class="chat" id="chat" role="dialog" aria-label="Preguntale a Lamppy" hidden>
+  <div class="ch"><b><span class="dots"><i></i><i></i><i></i><i></i></span>Preguntale a Lamppy</b><button type="button" id="cclose" aria-label="Cerrar">×</button></div>
+  <div class="clog" id="clog" aria-live="polite"></div>
+  <div class="cchips">
+    <button type="button">¿Qué hacés?</button><button type="button">¿Hacés clic por mí?</button><button type="button">¿Qué datos usás?</button>
+    <button type="button">¿En qué sistemas funcionás?</button><button type="button">¿Llegás al celular?</button><button type="button">¿Cómo te pruebo?</button>
+  </div>
+  <form id="cform"><input id="q" type="text" maxlength="200" placeholder="Escribí tu pregunta" autocomplete="off" aria-label="Tu pregunta"><button type="submit">Enviar</button></form>
+</div>
+
+<script>
+(function () {
+  var lamp = document.getElementById("lamp"), say = document.getElementById("say"), mock = document.getElementById("mock");
+  var pm = document.getElementById("pmark"), pmLabel = pm.querySelector("em"), rot = lamp.querySelector(".rot");
+  var imgs = lamp.querySelectorAll("img"), stations = document.querySelectorAll(".st");
+  var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* demo principal: tarjeta de pasos */
+  var T = ["Abrir la imagen", "Elegir la herramienta de recorte", "Arrastrar sobre la foto"];
+  var steps = document.getElementById("steps");
+  function renderSteps(s) {
+    var now = s === "senala" ? 1 : s === "haces" ? 2 : s === "listo" ? 3 : 0;
+    steps.innerHTML = "";
+    T.forEach(function (t, j) { var li = document.createElement("li"); li.textContent = t; li.className = j < now ? "" : (j === now ? "now" : "todo"); steps.appendChild(li); });
+  }
+  renderSteps("pedir");
+
+  /* ejemplos: cada paso mueve a Lamppy a otro lugar de la ventana */
+  var EX = {
+    mail: [
+      { p: "#ex-mail .b-new", side: "right", m: "Redactar", l: "Tocá Redactar", f: "alegre", z: "near", say: "Primero, tocá Redactar para empezar un mensaje nuevo." },
+      { p: "#ex-mail .f-to", side: "below", m: "Para", l: "Escribí quién lo recibe", f: "neutral", z: "mid", say: "En Para va la dirección de quien lo recibe." },
+      { p: "#ex-mail .b-attach", side: "below", m: "Adjuntar", l: "Adjuntá el archivo", f: "pensativo", z: "far", say: "Para mandar un archivo, usá Adjuntar y elegilo de tu compu." },
+      { p: "#ex-mail .b-send", side: "right", m: "Enviar", l: "Tocá Enviar", f: "agradecido", z: "near", say: "Cuando esté todo listo, tocá Enviar. ¡Y ya está!" }
+    ],
+    web: [
+      { p: "#ex-web .addr", side: "below", m: "Barra de direcciones", l: "Escribí en la barra", f: "neutral", z: "mid", say: "Acá escribís la página que buscás, o directamente lo que querés saber." },
+      { p: "#ex-web .search", side: "below", m: "Buscador", l: "Contale qué buscás", f: "pensativo", z: "far", say: "En el buscador escribí con tus palabras lo que necesitás." },
+      { p: "#ex-web .res1", side: "right", m: "Resultado", l: "Abrí un resultado", f: "alegre", z: "mid", say: "Los títulos azules son enlaces. Hacé clic en el que más se parezca." },
+      { p: "#ex-web .back", side: "below", m: "Atrás", l: "Volvé si no era", f: "sorprendido", z: "near", say: "¿No era? Con esta flecha volvés a la página anterior." }
+    ],
+    app: [
+      { p: "#ex-app .m-file", side: "below", m: "Archivo", l: "Mirá el menú Archivo", f: "neutral", z: "mid", say: "Todo programa tiene un menú Archivo: ahí abrís y guardás." },
+      { p: "#ex-app .m-tool", side: "below", m: "Atajos", l: "Probá los íconos", f: "pensativo", z: "far", say: "Estos íconos son atajos. Pasá el mouse y te dicen qué hacen." },
+      { p: "#ex-app .cells", side: "right", m: "Celdas", l: "Escribí en una celda", f: "alegre", z: "mid", say: "Hacé clic en una celda y escribí. Así se carga cada dato." },
+      { p: "#ex-app .m-save", side: "below", m: "Guardar", l: "Guardá seguido", f: "agradecido", z: "near", say: "Y guardá seguido, así no perdés nada." }
+    ]
+  };
+  Object.keys(EX).forEach(function (k) {
+    var ol = document.querySelector("#ex-" + k + " .steps-l");
+    EX[k].forEach(function (s, j) { var li = document.createElement("li"); li.textContent = s.l; li.dataset.n = j + 1; ol.appendChild(li); });
+  });
+  function markList(el) {
+    if (!el || !el.dataset.ex) return;
+    el.querySelectorAll(".steps-l li").forEach(function (li, j) { li.classList.toggle("now", j === exI); });
+  }
+
+  var SIZES = { far: 64, mid: 104, near: 160 };
+  var vw, vh, mob;
+  function measure() { vw = innerWidth; vh = innerHeight; mob = vw < 900; }
+  measure();
+
+  var chat = false, cur = null, sp = null, exI = 0, exTimer = null, armed = false, armTmr, sayTmr, lastId = "";
+  var st = { x: 0, y: 0, s: 300, ok: false }, tg = { x: 0, y: 0, s: 300, a: "a-r", below: false };
+  var running = false, until = 0;
+
+  function spec(el) {
+    if (el.dataset.ex) { var s = EX[el.dataset.ex][exI]; return { point: s.p, side: s.side, mark: s.m, say: s.say, face: s.f, size: s.z }; }
+    return { point: el.dataset.point, side: el.dataset.side, mark: el.dataset.mark, say: el.dataset.say, face: el.dataset.face, size: el.dataset.size, big: el.hasAttribute("data-big") };
+  }
+
+  /* elementos de texto que Lamppy no debe tapar */
+  var textNodes = Array.prototype.slice.call(document.querySelectorAll(
+    "main h1, main h2, main h3, main p, main li, main label, main input, main button, main .chip, main .status, main .tag, " +
+    ".mock .menu, .mock .ask, .mock .card, .mock .done span, .mini .tb, .mini .row, .mini .b-new, .mini .b-send, .mini .b-attach, .mini .addr, .mini .search, .mini .res, .mini .menu2, .mini .icons div"));
+  function ov(a, b) { var w = Math.min(a[2], b[2]) - Math.max(a[0], b[0]), h = Math.min(a[3], b[3]) - Math.max(a[1], b[1]); return w > 0 && h > 0 ? w * h : 0; }
+  function visibleText(t) {
+    var out = [];
+    for (var i = 0; i < textNodes.length; i++) {
+      var n = textNodes[i];
+      if (t && (t.contains(n) || n.contains(t))) continue;
+      var r = n.getBoundingClientRect();
+      if (r.width < 2 || r.height < 2 || r.bottom < 0 || r.top > vh) continue;
+      out.push([r.left - 3, r.top - 3, r.right + 3, r.bottom + 3]);
+    }
+    return out;
+  }
+  function choose(t, r, s, pref) {
+    var g = 10, cx = r.left + r.width / 2, cy = r.top + r.height / 2, c = [], texts = visibleText(t);
+    function add(id, x, y) { c.push({ id: id, x: Math.max(8, Math.min(vw - s - 8, x)), y: Math.max(8, Math.min(vh - s - 8, y)) }); }
+    add("left", r.left - s - g, cy - s / 2); add("right", r.right + g, cy - s / 2); add("above", cx - s / 2, r.top - s - g); add("below", cx - s / 2, r.bottom + g);
+    add("above-l", r.left, r.top - s - g); add("above-r", r.right - s, r.top - s - g); add("below-l", r.left, r.bottom + g); add("below-r", r.right - s, r.bottom + g);
+    add("left-t", r.left - s - g, r.top); add("left-b", r.left - s - g, r.bottom - s); add("right-t", r.right + g, r.top); add("right-b", r.right + g, r.bottom - s);
+    add("left-far", r.left - s * 1.7 - g, cy - s / 2); add("right-far", r.right + s * 0.7 + g, cy - s / 2); add("above-far", cx - s / 2, r.top - s * 1.8 - g); add("below-far", cx - s / 2, r.bottom + s * 0.7 + g);
+    var bw = Math.min(say.offsetWidth, vw - 32), bh = say.offsetHeight, inset = s * 0.12, tr = [r.left, r.top, r.right, r.bottom], best = null, bs = 1e12;
+    for (var i = 0; i < c.length; i++) {
+      var p = c[i], L = [p.x + inset, p.y + inset, p.x + s - inset, p.y + s - inset];
+      var lamps = 2 * ov(L, tr) * 3;
+      for (var k = 0; k < texts.length; k++) lamps += 2 * ov(L, texts[k]);
+      var pen = p.id === pref ? 0 : (p.id.indexOf(pref) === 0 ? 60 : 160);
+      pen += Math.hypot(p.x + s / 2 - cx, p.y + s / 2 - cy) * 0.1;
+      if (p.id === lastId) pen -= 400;
+      for (var v = 0; v < 4; v++) {
+        var below = v > 1, al = v % 2 === 0 ? "a-l" : "a-r";
+        var bx = al === "a-l" ? p.x : p.x + s - bw, by = below ? p.y + s : p.y - bh, B = [bx, by, bx + bw, by + bh];
+        var sc = lamps + pen + ov(B, tr) * 3, ar = bw * bh;
+        for (k = 0; k < texts.length; k++) sc += ov(B, texts[k]);
+        sc += (ar - ov(B, [0, 0, vw, vh])) * 4;
+        if (sc < bs) { bs = sc; best = { id: p.id, x: p.x, y: p.y, a: al, below: below }; }
+      }
+    }
+    return best;
+  }
+
+  function compute() {
+    if (!cur || !sp) return;
+    if (chat) { var cs = mob ? 80 : 120; tg.s = cs; tg.x = vw - cs - 16; tg.y = vh - cs - 16; tg.a = "a-r"; tg.below = false; pm.classList.remove("on"); return; }
+    var base = sp.size === "hero" ? 300 : (SIZES[sp.size] || 104), s = sp.big ? (mob ? 150 : Math.min(300, vw * 0.34)) : Math.max(48, base * (mob ? 0.72 : 1));
+    var t = sp.point ? document.querySelector(sp.point) : null;
+    if (sp.big || !t) { tg.s = s; tg.x = mob ? vw - s - 16 : vw * 0.88 - s; tg.y = mob ? vh - s - 30 : vh * 0.5 - s / 2; tg.a = "a-r"; tg.below = false; pm.classList.remove("on"); return; }
+    var r = t.getBoundingClientRect(), b = choose(t, r, s, sp.side || "left");
+    lastId = b.id; tg.s = s; tg.x = b.x; tg.y = b.y; tg.a = b.a; tg.below = b.below;
+    if (sp.mark) {
+      pm.style.left = r.left - 6 + "px"; pm.style.top = r.top - 6 + "px"; pm.style.width = r.width + 12 + "px"; pm.style.height = r.height + 12 + "px";
+      pmLabel.textContent = sp.mark; pm.classList.toggle("on", armed);
+    } else pm.classList.remove("on");
+  }
+  function frame() {
+    compute();
+    var k = reduce ? 1 : 0.1;
+    if (!st.ok) { st.x = tg.x; st.y = tg.y; st.s = tg.s; st.ok = true; }
+    var dx = tg.x - st.x, dy = tg.y - st.y, ds = tg.s - st.s;
+    st.x += dx * k; st.y += dy * k; st.s += ds * k;
+    lamp.style.width = st.s + "px";
+    lamp.style.transform = "translate3d(" + st.x + "px," + st.y + "px,0)";
+    rot.style.transform = "rotate(" + Math.max(-12, Math.min(12, dx * 0.06)) + "deg)";
+    say.className = "say " + tg.a + (tg.below ? " below" : "") + (chat ? " off" : "");
+    if (Math.abs(dx) + Math.abs(dy) + Math.abs(ds) > 0.4 || performance.now() < until) requestAnimationFrame(frame); else running = false;
+  }
+  function wake(ms) { until = performance.now() + (ms || 250); if (!running) { running = true; requestAnimationFrame(frame); } }
+
+  function show() {
+    lamp.dataset.f = sp.face;
+    imgs.forEach(function (i) { i.classList.toggle("cur", i.dataset.f === sp.face); });
+    clearTimeout(sayTmr); say.classList.add("swap");
+    var txt = sp.say || "";
+    sayTmr = setTimeout(function () { say.textContent = txt; say.classList.remove("swap"); wake(300); }, 200);
+    armed = false; pm.classList.remove("on"); clearTimeout(armTmr);
+    armTmr = setTimeout(function () { armed = true; wake(); }, reduce ? 0 : 700);
+    wake(900);
+  }
+  function apply(el) {
+    if (el === cur) return;
+    clearInterval(exTimer); cur = el; exI = 0;
+    stations.forEach(function (x) { x.classList.toggle("on", x === el); });
+    if (el.dataset.s) { mock.dataset.s = el.dataset.s; renderSteps(el.dataset.s); }
+    sp = spec(el); if (!chat) show(); markList(el);
+    if (el.dataset.ex) exTimer = setInterval(function () { exI = (exI + 1) % EX[el.dataset.ex].length; sp = spec(el); if (!chat) show(); markList(el); }, 3800);
+  }
+  var targets = document.querySelectorAll("[data-face]");
+  var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) apply(e.target); }); }, { rootMargin: "-45% 0px -50% 0px" });
+  targets.forEach(function (t) { io.observe(t); });
+  addEventListener("scroll", function () { wake(300); }, { passive: true });
+  addEventListener("resize", function () { measure(); wake(400); });
+  apply(targets[0]);
+
+  /* mini acción: tocá a Lamppy y preguntale lo básico. Las respuestas salen de un switch, no de un modelo. */
+  var panel = document.getElementById("chat"), log = document.getElementById("clog"), qin = document.getElementById("q"), hit = document.getElementById("hit");
+  function norm(s) { return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
+  function answer(q) {
+    var t = norm(q);
+    switch (true) {
+      case /clic|click|automat|por mi|controla|manej|robot/.test(t):
+        return { f: "sorprendido", t: "No. Nunca hago clic, escribo ni automatizo nada en tu compu. Te marco dónde ir y te explico, pero los pasos los hacés vos. Así lo aprendés de verdad." };
+      case /precio|gratis|cuesta|cuanto|pago|costo|cobr/.test(t):
+        return { f: "alegre", t: "Lamppy es gratis (free). Funciona con tu propia clave de Gemini, que tiene su plan gratuito." };
+      case /dato|privacidad|privad|guarda|graba|segur|espi|telemetr|cuenta/.test(t):
+        return { f: "neutral", t: "Miro tu pantalla solo mientras hay un pedido en curso, te escucho solo mientras me mantenés apretada y leo el texto que me enviás. No guardo nada y no hay cuentas ni telemetría. Pienso con el modelo Gemini de Google." };
+      case /celular|telefono|android|iphone|movil|ios|tablet/.test(t):
+        return { f: "alegre", t: "Todavía no. Hoy estoy en computadoras, pero la idea es llegar también a Android y a iPhone." };
+      case /windows|mac|linux|sistema|plataforma|compu|escritorio|donde funciona|funciona en/.test(t):
+        return { f: "alegre", t: "Hoy enseño tutoriales en computadoras de escritorio: Windows, macOS y Linux. Los celulares vienen después." };
+      case /microfono|voz|hablar|escrib|como se usa|como te uso|como funciona|como andas/.test(t):
+        return { f: "alegre", t: "Me hablás o me escribís, lo que prefieras. Le pedís una tarea, miro tu pantalla, te marco el botón justo y te explico cada paso. Vos los hacés." };
+      case /prueb|probar|descarg|instal|disponible|acceso|cuando sale|lista de espera|email|contacto|empezar/.test(t):
+        return { f: "agradecido", t: "Todavía estoy en desarrollo. Dejá tu email al final de la página y nos ponemos en contacto para darte acceso.", go: "#usar" };
+      case /idioma|espanol|ingles|lengua/.test(t):
+        return { f: "alegre", t: "Hablo y escribo en español." };
+      case /internet|conexion|online|offline|gemini|modelo|google|inteligencia/.test(t):
+        return { f: "pensativo", t: "Sí, necesito internet: pienso con el modelo Gemini de Google, con tu propia clave." };
+      case /ejemplo|tutorial|sirve|ayud|aprender|que puedo|que podes/.test(t):
+        return { f: "alegre", t: "Por ejemplo: recortar una foto, mandar un email con un archivo, buscar algo en internet o empezar a usar un programa nuevo.", go: "#ejemplos" };
+      case /que sos|quien|que es|que haces|que hace|para que|que eres|lamppy/.test(t):
+        return { f: "alegre", t: "Soy una lámpara que flota sobre tu pantalla y te enseña a usar cualquier programa. Me pedís una tarea, te marco dónde hacer clic y te explico cada paso." };
+      case /gracias|genial|buenisimo|excelente|copado/.test(t):
+        return { f: "agradecido", t: "¡De nada! Cualquier otra cosa, preguntame." };
+      case /hola|buenas|hey|buen dia/.test(t):
+        return { f: "alegre", t: "¡Hola! Preguntame lo básico: qué hago, qué datos uso, en qué sistemas funciono." };
+      default:
+        return { f: "confundido", t: "Mmm, de eso todavía no sé. Probá con: qué hago, si hago clic por vos, qué datos uso, en qué sistemas funciono o cómo probarme." };
+    }
+  }
+  function setFace(f) { lamp.dataset.f = f; imgs.forEach(function (i) { i.classList.toggle("cur", i.dataset.f === f); }); }
+  function addMsg(kind, text, go) {
+    var m = document.createElement("div"); m.className = "m " + kind; m.textContent = text;
+    if (go) { var b = document.createElement("button"); b.type = "button"; b.textContent = go === "#usar" ? "Ir al email" : "Ver ejemplos"; b.addEventListener("click", function () { closeChat(); var e = document.querySelector(go); if (e) e.scrollIntoView({ block: "start" }); }); m.appendChild(b); }
+    log.appendChild(m); log.scrollTop = log.scrollHeight; return m;
+  }
+  var askTmr;
+  function ask(q) {
+    q = q.trim(); if (!q) return;
+    addMsg("u", q); var th = addMsg("t l", "…"); setFace("pensativo");
+    clearTimeout(askTmr);
+    askTmr = setTimeout(function () { var a = answer(q); th.remove(); addMsg("l", a.t, a.go); setFace(a.f); }, reduce ? 0 : 650);
+  }
+  function openChat() {
+    if (chat) return; chat = true; panel.hidden = false; hit.setAttribute("aria-expanded", "true"); pm.classList.remove("on");
+    if (!log.children.length) addMsg("l", "¡Hola! Preguntame lo básico sobre Lamppy. Tocá una pregunta o escribí la tuya.");
+    setFace("alegre"); wake(900); qin.focus({ preventScroll: true });
+  }
+  function closeChat() { if (!chat) return; chat = false; panel.hidden = true; hit.setAttribute("aria-expanded", "false"); show(); }
+  hit.addEventListener("click", function () { chat ? closeChat() : openChat(); });
+  document.getElementById("cclose").addEventListener("click", closeChat);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeChat(); });
+  document.getElementById("cform").addEventListener("submit", function (e) { e.preventDefault(); ask(qin.value); qin.value = ""; });
+  panel.querySelectorAll(".cchips button").forEach(function (b) { b.addEventListener("click", function () { ask(b.textContent); }); });
+
+  /* formulario: Web3Forms reenvía el email al correo del autor sin mostrarlo en la página.
+     La clave de acceso es pública por diseño. Se obtiene en web3forms.com con el correo de destino. */
+  var WEB3FORMS_KEY = "";
+  var f = document.getElementById("f"), ok = document.getElementById("ok");
+  f.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var btn = f.querySelector("button[type=submit]"), email = document.getElementById("email");
+    function msg(t, good) { ok.textContent = t; ok.hidden = false; ok.style.color = good ? "" : "var(--red)"; }
+    if (!WEB3FORMS_KEY) { msg("El envío todavía no está configurado. Probá más tarde.", false); return; }
+    btn.disabled = true; btn.textContent = "Enviando…";
+    fetch("https://api.web3forms.com/submit", {
+      method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ access_key: WEB3FORMS_KEY, subject: "Nuevo contacto desde la web de Lamppy", from_name: "Web de Lamppy", email: email.value, message: "Quiere probar Lamppy.", botcheck: f.elements.botcheck.checked })
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      if (!d.success) throw new Error("no");
+      msg("Gracias. Te escribimos pronto.", true); email.disabled = true; btn.textContent = "Enviado";
+    }).catch(function () { msg("No pudimos enviar tu email. Probá de nuevo en un rato.", false); btn.disabled = false; btn.textContent = "Quiero usarla"; });
+  });
+})();
+</script>

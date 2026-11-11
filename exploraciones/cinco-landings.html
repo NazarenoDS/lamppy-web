@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lamppy Web</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Instrument+Sans:wght@400;500;600&family=Caveat:wght@600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&family=Fredoka:wght@500;700&family=Nunito:wght@500;700&family=Newsreader:opsz,wght@6..72,400;6..72,600&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Concepto: una sola página con 5 direcciones de landing para Lamppy, elegibles desde la barra superior.
+   Cada dirección define su propia paleta y tipografía bajo su clase (.v1 … .v5). */
+:root {
+  --chrome-bg: #14161c;
+  --chrome-fg: #eceff4;
+  --chrome-dim: #9aa3b2;
+  --chrome-line: #2a2e38;
+  --chrome-hot: #ffc857;
+  --gutter-l: max(16px, env(safe-area-inset-left, 0px));
+  --gutter-r: max(16px, env(safe-area-inset-right, 0px));
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--chrome-bg); color: var(--chrome-fg); font-family: "Instrument Sans", system-ui, sans-serif; font-size: 16px; line-height: 1.55; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--chrome-bg); }
+img { max-width: 100%; display: block; }
+a { color: inherit; }
+button { font: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--chrome-hot); outline-offset: 3px; }
+h1, h2, h3, p { margin: 0; }
+h1, h2, h3 { text-wrap: balance; }
+
+/* ---------- barra de selección ---------- */
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--chrome-bg); border-bottom: 1px solid var(--chrome-line); padding: 10px var(--gutter-r) 10px var(--gutter-l); display: flex; gap: 8px 16px; align-items: center; flex-wrap: wrap; }
+.bar b { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 15px; letter-spacing: .01em; white-space: nowrap; }
+.bar b span { color: var(--chrome-dim); font-weight: 500; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tabs button { background: transparent; color: var(--chrome-dim); border: 1px solid var(--chrome-line); border-radius: 999px; padding: 5px 13px; font-size: 14px; font-weight: 500; }
+.tabs button:hover { color: var(--chrome-fg); border-color: var(--chrome-dim); }
+.tabs button[aria-selected="true"] { background: var(--chrome-hot); color: #1a1405; border-color: var(--chrome-hot); }
+
+.wrap { padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
+.in { max-width: 1120px; margin: 0 auto; }
+section.v { overflow: clip; }
+.note { background: var(--chrome-bg); color: var(--chrome-dim); font-size: 13px; padding: 10px var(--gutter-r) 10px var(--gutter-l); border-top: 1px solid var(--chrome-line); }
+.note .in { display: flex; gap: 6px 20px; flex-wrap: wrap; }
+.note strong { color: var(--chrome-fg); font-weight: 600; }
+
+/* ---------- piezas compartidas ---------- */
+.btn { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 12px 22px; font-weight: 600; text-decoration: none; border: 2px solid transparent; font-size: 16px; }
+.cmd { position: relative; border-radius: 12px; padding: 16px 56px 16px 18px; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 14px; line-height: 1.7; overflow-x: auto; white-space: pre; }
+.cmd button { position: absolute; top: 10px; right: 10px; border-radius: 8px; border: 1px solid currentColor; background: transparent; color: inherit; font-size: 12px; padding: 3px 9px; opacity: .8; }
+.cmd button:hover { opacity: 1; }
+
+/* demo interactiva: ventana falsa + marca + globo + tarjeta de pasos */
+.demo { position: relative; border-radius: 14px; overflow: hidden; aspect-ratio: 16 / 11; min-height: 300px; font-family: "Instrument Sans", sans-serif; background: #e9ecf2; color: #20242d; box-shadow: 0 30px 70px -30px rgba(0,0,0,.55); }
+.demo .titlebar { height: 30px; background: #d3d8e2; display: flex; align-items: center; gap: 6px; padding: 0 12px; font-size: 12px; color: #4b5363; }
+.demo .titlebar i { width: 10px; height: 10px; border-radius: 50%; background: #aab2c2; display: block; }
+.demo .titlebar span { margin-left: 8px; }
+.demo .menu { display: flex; gap: 16px; padding: 0 14px; height: 30px; align-items: center; font-size: 12.5px; background: #eef0f5; border-bottom: 1px solid #d3d8e2; }
+.demo .tools { position: absolute; left: 0; top: 60px; bottom: 0; width: 52px; background: #dfe3ec; display: flex; flex-direction: column; gap: 10px; align-items: center; padding-top: 14px; }
+.demo .tools div { width: 30px; height: 30px; border-radius: 7px; background: #c5ccdb; display: grid; place-items: center; font-size: 15px; color: #5b6578; }
+.demo .canvas { position: absolute; left: 52px; right: 0; top: 60px; bottom: 0; background: #f6f7fa; display: grid; place-items: center; }
+.demo .photo { width: 56%; aspect-ratio: 4 / 3; border-radius: 6px; background: linear-gradient(160deg, #7fb2e8 0 46%, #5d9a6a 46% 100%); box-shadow: 0 6px 20px rgba(0,0,0,.2); position: relative; }
+.demo .photo::after { content: ""; position: absolute; width: 18%; aspect-ratio: 1; border-radius: 50%; background: #ffe08a; top: 12%; right: 14%; }
+.mark { position: absolute; border: 3px solid var(--mark, #ff5a3c); border-radius: 10px; box-shadow: 0 0 0 4px color-mix(in srgb, var(--mark, #ff5a3c) 25%, transparent); transition: left .5s ease, top .5s ease, width .5s ease, height .5s ease; pointer-events: none; }
+.mark::after { content: ""; position: absolute; inset: -9px; border-radius: 14px; border: 2px solid var(--mark, #ff5a3c); animation: ping 1.6s ease-out infinite; }
+.mark em { position: absolute; left: 0; top: calc(100% + 8px); font-style: normal; font-size: 11.5px; font-weight: 600; background: var(--mark, #ff5a3c); color: #fff; padding: 2px 8px; border-radius: 6px; white-space: nowrap; }
+@keyframes ping { from { transform: scale(.9); opacity: .9; } to { transform: scale(1.25); opacity: 0; } }
+.steps { position: absolute; right: 14px; top: 76px; width: min(210px, 42%); background: #fff; border-radius: 12px; padding: 12px 14px; font-size: 12.5px; box-shadow: 0 10px 30px rgba(20,25,40,.25); }
+.steps h4 { margin: 0 0 6px; font-size: 13px; font-weight: 600; }
+.steps ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.steps li { color: #8a93a5; text-decoration: line-through; }
+.steps li.now { color: #20242d; text-decoration: none; font-weight: 600; }
+.steps li.todo { text-decoration: none; opacity: .5; }
+.steps li::before { content: "✓ "; }
+.steps li.now::before { content: "→ "; }
+.steps li.todo::before { content: "· "; }
+.lamp { position: absolute; right: 14px; bottom: 12px; width: 92px; border: 0; background: none; padding: 0; filter: drop-shadow(0 8px 14px rgba(0,0,0,.3)); animation: bob 4s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(-5px); } }
+.balloon { position: absolute; right: 112px; bottom: 34px; max-width: min(250px, 52%); background: #fff; border-radius: 14px 14px 4px 14px; padding: 10px 13px; font-size: 13px; line-height: 1.4; box-shadow: 0 10px 28px rgba(20,25,40,.25); }
+.demo-next { margin-top: 14px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; font-size: 14px; }
+.demo-next button { border: 0; border-radius: 999px; padding: 8px 16px; font-weight: 600; background: var(--accent); color: var(--on-accent); }
+
+@media (prefers-reduced-motion: reduce) { .mark::after, .lamp { animation: none; } html { scroll-behavior: auto; } .mark { transition: none; } }
+
+/* =========================================================
+   V1 · TALLER  — noche, el cono de luz de la lámpara
+   ========================================================= */
+.v1 { --bg: #0e1424; --bg2: #151d33; --fg: #f3ecdc; --dim: #a9b0c3; --accent: #ffc857; --on-accent: #1d1503; --line: #2a3452; background: var(--bg); color: var(--fg); font-family: "Instrument Sans", sans-serif; }
+.v1 h1, .v1 h2, .v1 h3 { font-family: "Bricolage Grotesque", sans-serif; letter-spacing: -.02em; }
+.v1 .hero { position: relative; padding-block: 56px 72px; background: radial-gradient(60% 70% at 78% 36%, rgba(255,200,87,.28), transparent 70%); }
+.v1 .hero .in { display: grid; grid-template-columns: 1.1fr .9fr; gap: 32px 48px; align-items: center; }
+.v1 .eyebrow { color: var(--accent); font-weight: 600; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; }
+.v1 h1 { font-size: clamp(40px, 6.2vw, 76px); line-height: 1; font-weight: 800; margin: 14px 0 20px; }
+.v1 h1 em { font-style: normal; color: var(--accent); }
+.v1 .lead { font-size: clamp(17px, 2vw, 20px); color: var(--dim); max-width: 46ch; }
+.v1 .cta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
+.v1 .btn.p { background: var(--accent); color: var(--on-accent); }
+.v1 .btn.s { border-color: var(--line); color: var(--fg); }
+.v1 .big { position: relative; display: grid; place-items: center; }
+.v1 .big img { width: min(100%, 420px); filter: drop-shadow(0 0 60px rgba(255,200,87,.45)); animation: bob 5s ease-in-out infinite; }
+.v1 .band { background: var(--bg2); padding-block: 72px; }
+.v1 .band h2 { font-size: clamp(28px, 4vw, 44px); line-height: 1.05; font-weight: 800; max-width: 20ch; }
+.v1 .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 36px; }
+.v1 .grid3 > div { border-top: 2px solid var(--accent); padding-top: 14px; }
+.v1 .grid3 h3 { font-size: 20px; margin-bottom: 6px; }
+.v1 .grid3 p { color: var(--dim); }
+.v1 .sec { padding-block: 72px; }
+.v1 .sec .in { display: grid; grid-template-columns: .85fr 1.15fr; gap: 40px; align-items: center; }
+.v1 .sec h2 { font-size: clamp(28px, 4vw, 44px); line-height: 1.05; font-weight: 800; margin-bottom: 14px; }
+.v1 .sec p { color: var(--dim); max-width: 48ch; }
+.v1 .never { margin-top: 18px; display: inline-block; border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: 6px 12px; font-weight: 600; font-size: 15px; }
+.v1 .try { background: var(--bg2); padding-block: 72px; }
+.v1 .try h2 { font-size: clamp(28px, 4vw, 44px); font-weight: 800; margin-bottom: 8px; }
+.v1 .try .cmd { background: #080c18; color: #dfe6ff; margin-top: 20px; max-width: 560px; }
+.v1 .try small { display: block; color: var(--dim); margin-top: 14px; max-width: 60ch; }
+.v1 .foot { padding-block: 28px; color: var(--dim); font-size: 14px; border-top: 1px solid var(--line); }
+
+/* =========================================================
+   V2 · CUADERNO — papel milimetrado, anotaciones a mano
+   ========================================================= */
+.v2 { --bg: #f4f7fb; --fg: #18253d; --dim: #52607a; --accent: #e8452c; --on-accent: #fff; --ink: #2a5bd7; --line: #cfd9ea; --mark: #e8452c;
+  background-color: var(--bg); background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px); background-size: 28px 28px; color: var(--fg); font-family: "Source Serif 4", Georgia, serif; }
+.v2 h1, .v2 h2 { font-family: "Source Serif 4", Georgia, serif; font-weight: 600; letter-spacing: -.015em; }
+.v2 .hand { font-family: "Caveat", cursive; font-weight: 600; color: var(--accent); font-size: 26px; line-height: 1.1; }
+.v2 .hero { padding-block: 52px 56px; }
+.v2 .hero .in { display: grid; grid-template-columns: 1fr 1.25fr; gap: 36px 44px; align-items: center; }
+.v2 h1 { font-size: clamp(36px, 5.2vw, 62px); line-height: 1.04; margin: 10px 0 18px; }
+.v2 h1 u { text-decoration: none; background: linear-gradient(transparent 62%, #ffd86b 62% 92%, transparent 92%); }
+.v2 .lead { font-size: 19px; color: var(--dim); max-width: 42ch; }
+.v2 .btn.p { background: var(--fg); color: #fff; border-radius: 10px; }
+.v2 .btn.s { border-color: var(--fg); color: var(--fg); border-radius: 10px; }
+.v2 .cta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 26px; }
+.v2 .heroDemo { position: relative; }
+.v2 .heroDemo .hand { position: absolute; left: -6px; top: -34px; transform: rotate(-4deg); }
+.v2 .page { background: #fff; border: 1px solid var(--line); padding: 36px clamp(18px, 4vw, 40px); margin-block: 0; box-shadow: 0 1px 0 var(--line); }
+.v2 .page + .page { margin-top: 0; }
+.v2 .page h2 { font-size: clamp(26px, 3.6vw, 38px); margin-bottom: 18px; }
+.v2 .qa { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.v2 .qa blockquote { margin: 0; border: 2px solid var(--fg); border-radius: 4px 18px 18px 18px; padding: 16px 18px; background: #fffdf4; font-size: 18px; }
+.v2 .qa .hand { display: block; margin-top: 10px; font-size: 22px; }
+.v2 .twocol { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+.v2 .twocol p { color: var(--dim); font-size: 18px; }
+.v2 .list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; font-size: 18px; }
+.v2 .list li::before { content: "✕ "; color: var(--accent); font-weight: 600; }
+.v2 .list.ok li::before { content: "✓ "; color: var(--ink); }
+.v2 .try .cmd { background: #18253d; color: #e8efff; max-width: 560px; }
+.v2 .foot { padding-block: 26px 40px; color: var(--dim); font-size: 15px; }
+
+/* =========================================================
+   V3 · MANUAL — documentación técnica, para quien usa Linux
+   ========================================================= */
+.v3 { --bg: #0b0f0d; --bg2: #121815; --fg: #dcebe2; --dim: #8fa699; --accent: #5ff0a6; --on-accent: #04170d; --amber: #ffcb5c; --line: #22302a; background: var(--bg); color: var(--fg); font-family: "IBM Plex Sans", sans-serif; --mark: #5ff0a6; }
+.v3 h1, .v3 h2, .v3 h3, .v3 .mono { font-family: "JetBrains Mono", ui-monospace, monospace; }
+.v3 .hero { padding-block: 56px 48px; border-bottom: 1px solid var(--line); }
+.v3 .prompt { color: var(--accent); font-family: "JetBrains Mono", monospace; font-size: 14px; }
+.v3 h1 { font-size: clamp(30px, 4.6vw, 54px); line-height: 1.1; font-weight: 600; margin: 14px 0 16px; letter-spacing: -.02em; }
+.v3 h1 span { color: var(--accent); }
+.v3 .lead { color: var(--dim); font-size: 18px; max-width: 58ch; }
+.v3 .hero .in { display: grid; grid-template-columns: 1.05fr .95fr; gap: 36px; align-items: center; }
+.v3 .btn { border-radius: 6px; font-family: "JetBrains Mono", monospace; font-size: 14px; }
+.v3 .btn.p { background: var(--accent); color: var(--on-accent); }
+.v3 .btn.s { border-color: var(--line); color: var(--fg); }
+.v3 .cta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+.v3 .sec { padding-block: 56px; border-bottom: 1px solid var(--line); }
+.v3 .sec h2 { font-size: 15px; color: var(--accent); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 22px; }
+.v3 .protocol { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.v3 .protocol > div { background: var(--bg2); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+.v3 .protocol code { color: var(--amber); font-family: "JetBrains Mono", monospace; font-size: 15px; }
+.v3 .protocol p { color: var(--dim); margin-top: 6px; font-size: 15px; }
+.v3 .proof { margin-top: 18px; color: var(--dim); max-width: 70ch; }
+.v3 .proof b { color: var(--fg); }
+.v3 table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.v3 th, .v3 td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.v3 th { color: var(--dim); font-weight: 500; font-family: "JetBrains Mono", monospace; font-size: 13px; width: 28%; }
+.v3 .tablewrap { overflow-x: auto; }
+.v3 .gest { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.v3 .gest > div { border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+.v3 .gest .mono { color: var(--amber); font-size: 14px; }
+.v3 .gest p { color: var(--dim); margin-top: 6px; font-size: 15px; }
+.v3 .cmd { background: var(--bg2); border: 1px solid var(--line); color: #c9ffe0; max-width: 640px; }
+.v3 .foot { padding-block: 24px 40px; color: var(--dim); font-size: 13px; font-family: "JetBrains Mono", monospace; }
+
+/* =========================================================
+   V4 · PERSONAJE — colorida, la lámpara con sus caras
+   ========================================================= */
+.v4 { --bg: #fff8e6; --fg: #1f2540; --dim: #4c5473; --blue: #3f7be0; --red: #ea4c3c; --yellow: #ffc43a; --green: #3aa45a; --accent: #3f7be0; --on-accent: #fff; background: var(--bg); color: var(--fg); font-family: "Nunito", sans-serif; font-weight: 500; --mark: #ea4c3c; }
+.v4 h1, .v4 h2, .v4 h3 { font-family: "Fredoka", sans-serif; font-weight: 700; letter-spacing: -.01em; }
+.v4 .hero { padding-block: 48px 40px; position: relative; }
+.v4 .hero .in { display: grid; grid-template-columns: 1fr 1fr; gap: 24px 40px; align-items: center; }
+.v4 h1 { font-size: clamp(42px, 7vw, 88px); line-height: .96; }
+.v4 h1 .c1 { color: var(--blue); } .v4 h1 .c2 { color: var(--red); } .v4 h1 .c3 { color: var(--green); }
+.v4 .lead { font-size: 20px; color: var(--dim); margin: 18px 0 26px; max-width: 40ch; }
+.v4 .btn { border-radius: 18px; font-family: "Fredoka", sans-serif; font-size: 18px; padding: 14px 26px; }
+.v4 .btn.p { background: var(--blue); color: #fff; box-shadow: 0 5px 0 #2a5bb3; }
+.v4 .btn.s { background: #fff; color: var(--fg); border-color: var(--fg); box-shadow: 0 5px 0 var(--fg); }
+.v4 .cta { display: flex; gap: 16px; flex-wrap: wrap; }
+.v4 .face { position: relative; display: grid; place-items: center; }
+.v4 .face::before { content: ""; position: absolute; width: 86%; aspect-ratio: 1; border-radius: 50%; background: var(--yellow); opacity: .55; }
+.v4 .face img { position: relative; width: min(100%, 440px); animation: bob 4s ease-in-out infinite; }
+.v4 .stripe { height: 14px; background: linear-gradient(90deg, var(--blue) 0 25%, var(--red) 25% 50%, var(--yellow) 50% 75%, var(--green) 75%); }
+.v4 .sec { padding-block: 64px; }
+.v4 .sec > .in > h2 { font-size: clamp(30px, 4.4vw, 52px); line-height: 1; max-width: 18ch; }
+.v4 .sec > .in > p.sub { font-size: 19px; color: var(--dim); max-width: 52ch; margin: 12px 0 30px; }
+.v4 .moods { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+.v4 .mood { background: #fff; border: 3px solid var(--fg); border-radius: 26px; padding: 18px 16px 20px; text-align: center; box-shadow: 0 6px 0 var(--fg); }
+.v4 .mood:nth-child(4n+1) { background: #e8f0ff; } .v4 .mood:nth-child(4n+2) { background: #ffe9e6; } .v4 .mood:nth-child(4n+3) { background: #fff3cc; } .v4 .mood:nth-child(4n+4) { background: #e2f5e8; }
+.v4 .mood img { width: 100%; max-width: 150px; margin: 0 auto 8px; }
+.v4 .mood h3 { font-size: 20px; }
+.v4 .mood p { font-size: 15px; color: var(--dim); margin-top: 4px; }
+.v4 .rules { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.v4 .rules > div { border: 3px solid var(--fg); border-radius: 22px; padding: 20px; background: #fff; }
+.v4 .rules h3 { font-size: 22px; margin-bottom: 6px; }
+.v4 .rules p { color: var(--dim); }
+.v4 .try { background: var(--fg); color: #fff; border-radius: 34px; padding: 40px clamp(20px, 5vw, 56px); }
+.v4 .try h2 { font-size: clamp(28px, 4vw, 44px); margin-bottom: 8px; }
+.v4 .try .cmd { background: #0f1430; color: #ffe7a1; margin-top: 18px; max-width: 560px; }
+.v4 .foot { padding-block: 30px 44px; color: var(--dim); text-align: center; }
+
+/* =========================================================
+   V5 · PRIVACIDAD — calma, el recorrido de tus datos
+   ========================================================= */
+.v5 { --bg: #f3f6f4; --fg: #1b2a26; --dim: #55655f; --accent: #0f6b57; --on-accent: #fff; --warm: #c9831a; --card: #ffffff; --line: #d6e0db; background: var(--bg); color: var(--fg); font-family: "Figtree", sans-serif; }
+.v5 h1, .v5 h2, .v5 h3 { font-family: "Newsreader", Georgia, serif; font-weight: 600; letter-spacing: -.015em; }
+.v5 .hero { padding-block: 60px 52px; }
+.v5 .hero .in { display: grid; grid-template-columns: 1.2fr .8fr; gap: 32px 48px; align-items: center; }
+.v5 h1 { font-size: clamp(38px, 5.6vw, 68px); line-height: 1.02; }
+.v5 .lead { font-size: 19px; color: var(--dim); margin: 18px 0 26px; max-width: 50ch; }
+.v5 .btn.p { background: var(--accent); color: var(--on-accent); }
+.v5 .btn.s { border-color: var(--accent); color: var(--accent); }
+.v5 .cta { display: flex; gap: 12px; flex-wrap: wrap; }
+.v5 .hero img { width: min(100%, 320px); margin-inline: auto; }
+.v5 .facts { display: flex; gap: 10px 22px; flex-wrap: wrap; margin-top: 26px; color: var(--dim); font-size: 15px; }
+.v5 .facts span::before { content: "✓ "; color: var(--accent); font-weight: 600; }
+.v5 .sec { padding-block: 60px; border-top: 1px solid var(--line); }
+.v5 .sec h2 { font-size: clamp(28px, 4vw, 42px); line-height: 1.08; max-width: 22ch; margin-bottom: 8px; }
+.v5 .sec .sub { color: var(--dim); max-width: 58ch; margin-bottom: 30px; font-size: 18px; }
+.v5 .flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 14px; align-items: stretch; }
+.v5 .node { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+.v5 .node h3 { font-size: 22px; margin-bottom: 8px; }
+.v5 .node ul { margin: 0; padding-left: 18px; color: var(--dim); display: grid; gap: 6px; font-size: 15px; }
+.v5 .node.me { border-color: var(--accent); }
+.v5 .arrow { align-self: center; color: var(--accent); font-size: 28px; }
+.v5 .nope { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
+.v5 .nope div { border-radius: 12px; background: #e6efeb; padding: 14px 16px; font-weight: 600; font-size: 15px; }
+.v5 .nope div::before { content: "✕ "; color: var(--warm); }
+.v5 .plan { margin-top: 22px; background: #fff6e2; border: 1px solid #ecd49c; border-radius: 12px; padding: 16px 20px; max-width: 70ch; color: #5c4210; font-size: 15px; }
+.v5 .ctl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.v5 .ctl > div { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+.v5 .ctl h3 { font-size: 21px; margin-bottom: 6px; }
+.v5 .ctl p { color: var(--dim); font-size: 16px; }
+.v5 .cmd { background: #0f2b24; color: #d2f5e8; max-width: 560px; }
+.v5 .foot { padding-block: 26px 44px; color: var(--dim); font-size: 14px; }
+
+/* ---------- móvil ---------- */
+@media (max-width: 860px) {
+  .v1 .hero .in, .v1 .sec .in, .v2 .hero .in, .v3 .hero .in, .v4 .hero .in, .v5 .hero .in { grid-template-columns: 1fr; }
+  .v1 .grid3, .v2 .qa, .v2 .twocol, .v3 .gest, .v4 .rules, .v5 .ctl { grid-template-columns: 1fr; }
+  .v3 .protocol, .v4 .moods, .v5 .nope { grid-template-columns: repeat(2, 1fr); }
+  .v5 .flow { grid-template-columns: 1fr; }
+  .v5 .arrow { transform: rotate(90deg); justify-self: center; }
+  .v1 .big img { width: min(70%, 320px); }
+  .v4 .face img { width: min(80%, 340px); }
+  .demo { aspect-ratio: auto; height: 340px; }
+  .demo .steps { display: none; }
+  .balloon { right: 104px; max-width: 56%; }
+  .v2 .heroDemo .hand { top: -30px; }
+}
+@media (max-width: 460px) {
+  .v3 .protocol, .v4 .moods, .v5 .nope { grid-template-columns: 1fr; }
+  .bar b span { display: none; }
+}
+</style>
+
+<header class="bar">
+  <b>Lamppy <span>· web</span></b>
+  <nav class="tabs" role="tablist" aria-label="Direcciones de landing">
+    <button role="tab" data-v="taller" aria-selected="true">1 · Taller</button>
+    <button role="tab" data-v="cuaderno" aria-selected="false">2 · Cuaderno</button>
+    <button role="tab" data-v="manual" aria-selected="false">3 · Manual</button>
+    <button role="tab" data-v="personaje" aria-selected="false">4 · Personaje</button>
+    <button role="tab" data-v="privacidad" aria-selected="false">5 · Privacidad</button>
+  </nav>
+</header>
+
+<!-- ======================= 1 · TALLER ======================= -->
+<section class="v v1" id="taller">
+  <div class="hero wrap"><div class="in">
+    <div>
+      <div class="eyebrow">Asistente de escritorio para Linux</div>
+      <h1>Una lámpara que te enseña a usar <em>cualquier programa.</em></h1>
+      <p class="lead">Le pedís algo con la voz o escribiendo. Lamppy mira tu pantalla, te marca dónde tocar y te explica cada paso. Los pasos los das vos.</p>
+      <div class="cta"><a class="btn p" href="#taller-probar" data-go>Probarla</a><a class="btn s" href="#taller-como" data-go>Ver cómo funciona</a></div>
+    </div>
+    <div class="big"><img src="assets/alegre.png" alt="Lamppy, una lámpara sonriente con la rosca de colores" width="420" height="420"></div>
+  </div></div>
+
+  <div class="band wrap" id="taller-como"><div class="in">
+    <h2>Te acompaña mientras aprendés, sin tocar nada.</h2>
+    <div class="grid3">
+      <div><h3>Habla con vos</h3><p>Mantené apretada la lámpara y pedí lo que necesitás. Te responde en voz alta y en español, y lo que dice aparece en un globo.</p></div>
+      <div><h3>Marca en tu pantalla</h3><p>Cuando hay que tocar un botón, un menú o un campo, dibuja una marca encima. Las marcas no bloquean tus clics.</p></div>
+      <div><h3>Lleva la cuenta</h3><p>Una tarjeta muestra el paso actual y tacha los que ya hiciste. Si te trabás, le preguntás de nuevo.</p></div>
+    </div>
+  </div></div>
+
+  <div class="sec wrap"><div class="in">
+    <div>
+      <h2>Mirá cómo te guía.</h2>
+      <p>Pedido de ejemplo: «¿Cómo recorto esta foto?». Lamppy ve la ventana, marca la herramienta y espera a que la uses.</p>
+      <span class="never">Nunca hace clic, escribe ni automatiza.</span>
+    </div>
+    <div><div class="demo" data-demo></div></div>
+  </div></div>
+
+  <div class="try wrap" id="taller-probar"><div class="in">
+    <h2>Ya la podés probar.</h2>
+    <p style="color:var(--dim);max-width:56ch">Hoy es una versión de desarrollo: se corre desde el repositorio, sin instalador. Necesitás Linux con Hyprland, Node y tu propia clave de Gemini.</p>
+    <div class="cmd" data-cmd></div>
+    <small>Todavía no hay instalador ni app para el celular.</small>
+  </div></div>
+  <div class="foot wrap"><div class="in">Lamppy no tiene cuentas, ni telemetría, ni servidores propios.</div></div>
+</section>
+
+<!-- ======================= 2 · CUADERNO ======================= -->
+<section class="v v2" id="cuaderno" hidden>
+  <div class="hero wrap"><div class="in">
+    <div>
+      <div class="hand">para los que no saben dónde hacer clic</div>
+      <h1>Alguien que te <u>señala</u> el botón justo.</h1>
+      <p class="lead">Lamppy es una lámpara que flota sobre tu escritorio. Le preguntás cómo hacer algo en cualquier programa y marca en la pantalla dónde ir, paso por paso.</p>
+      <div class="cta"><a class="btn p" href="#cuaderno-probar" data-go>Quiero probarla</a><a class="btn s" href="#cuaderno-pedidos" data-go>Qué le puedo pedir</a></div>
+    </div>
+    <div class="heroDemo"><span class="hand">¡acá! ↓</span><div class="demo" data-demo></div></div>
+  </div></div>
+
+  <div class="page wrap" id="cuaderno-pedidos"><div class="in">
+    <h2>Preguntas que se le pueden hacer</h2>
+    <div class="qa">
+      <blockquote>«¿Cómo recorto esta foto?»<span class="hand">→ te marca la herramienta de recorte</span></blockquote>
+      <blockquote>«No encuentro dónde cambiar la resolución.»<span class="hand">→ te lleva al menú correcto</span></blockquote>
+      <blockquote>«¿Cómo exporto esto como PDF?»<span class="hand">→ un paso a la vez, hasta terminar</span></blockquote>
+    </div>
+  </div></div>
+
+  <div class="page wrap"><div class="in twocol">
+    <div>
+      <h2>Lo que hace</h2>
+      <ul class="list ok">
+        <li>Mira tu pantalla cuando tenés un pedido en curso.</li>
+        <li>Te escucha solo mientras mantenés apretada la lámpara.</li>
+        <li>Habla y escribe en español.</li>
+        <li>Marca el elemento y explica cada paso.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>Lo que nunca hace</h2>
+      <ul class="list">
+        <li>Hacer clic por vos.</li>
+        <li>Escribir en tus programas.</li>
+        <li>Mover ventanas o ejecutar comandos.</li>
+        <li>Guardar tu pantalla, tu voz o tu texto.</li>
+      </ul>
+      <p style="margin-top:16px">Como todo lo hacés vos, lo aprendés de verdad.</p>
+    </div>
+  </div></div>
+
+  <div class="page wrap try" id="cuaderno-probar"><div class="in">
+    <h2>Probala desde el repositorio</h2>
+    <p style="color:var(--dim);font-size:18px;max-width:56ch;margin-bottom:16px">Es una versión de desarrollo para Linux con Hyprland. Todavía no tiene instalador.</p>
+    <div class="cmd" data-cmd></div>
+  </div></div>
+  <div class="foot wrap"><div class="in">Lamppy · la lámpara que enseña, no la que hace.</div></div>
+</section>
+
+<!-- ======================= 3 · MANUAL ======================= -->
+<section class="v v3" id="manual" hidden>
+  <div class="hero wrap"><div class="in">
+    <div>
+      <div class="prompt">$ lamppy --enseñar</div>
+      <h1>Un asistente que <span>guía, no ejecuta.</span></h1>
+      <p class="lead">Lamppy es una app de Electron para Linux (Wayland, Hyprland). Captura tu pantalla con grim, escucha cuando mantenés apretada la lámpara y le pasa todo a Gemini. A cambio devuelve pasos, marcas y voz.</p>
+      <div class="cta"><a class="btn p" href="#manual-instalar" data-go>$ npm run dev</a><a class="btn s" href="#manual-protocolo" data-go>Ver el protocolo</a></div>
+    </div>
+    <div><div class="demo" data-demo></div></div>
+  </div></div>
+
+  <div class="sec wrap" id="manual-protocolo"><div class="in">
+    <h2>El protocolo de guía</h2>
+    <div class="protocol">
+      <div><code>step</code><p>Qué paso es, dicho con palabras.</p></div>
+      <div><code>mark</code><p>Un rectángulo en pantalla, con etiqueta opcional.</p></div>
+      <div><code>speech</code><p>Lo que dice la lámpara.</p></div>
+      <div><code>state</code><p>El estado del personaje.</p></div>
+    </div>
+    <p class="proof"><b>No hay evento para clic, tecla o arrastre.</b> Lamppy solo habla ese vocabulario, así que no puede hacer en tu interfaz algo que no se puede expresar. Es la garantía de diseño, no una promesa.</p>
+  </div></div>
+
+  <div class="sec wrap"><div class="in">
+    <h2>Gestos de la lámpara</h2>
+    <div class="gest">
+      <div><div class="mono">click · &lt; 300 ms</div><p>Despierta la lámpara o abre el campo de texto. Enter envía, Esc cierra.</p></div>
+      <div><div class="mono">hold · ≥ 300 ms</div><p>Abre el micrófono mientras lo mantenés. Push-to-talk: nunca se abre solo.</p></div>
+      <div><div class="mono">drag · franja superior</div><p>Mueve la lámpara. A los 5 minutos sin actividad se duerme y cierra la sesión.</p></div>
+    </div>
+  </div></div>
+
+  <div class="sec wrap"><div class="in">
+    <h2>Requisitos</h2>
+    <div class="tablewrap"><table>
+      <tr><th>sistema</th><td>Linux con Wayland y Hyprland (configurado en Lua). Probado con 0.56.x.</td></tr>
+      <tr><th>captura</th><td><span class="mono">grim</span> instalado y en el PATH.</td></tr>
+      <tr><th>runtime</th><td>Node.js con npm. Desarrollado y probado en Node 26.</td></tr>
+      <tr><th>modelo</th><td>Clave de Gemini (<span class="mono">GEMINI_API_KEY</span>) y conexión a internet.</td></tr>
+      <tr><th>entrada</th><td>Micrófono para hablar. También se puede escribir.</td></tr>
+    </table></div>
+  </div></div>
+
+  <div class="sec wrap" id="manual-instalar"><div class="in">
+    <h2>Instalar</h2>
+    <div class="cmd" data-cmd></div>
+    <p class="proof">Pegá las reglas de ventana en tu config de Hyprland, recargá y volvé a abrir Lamppy. Lamppy nunca edita tu config.</p>
+  </div></div>
+  <div class="foot wrap"><div class="in">versión de desarrollo · sin instalador · sin app móvil · sin telemetría</div></div>
+</section>
+
+<!-- ======================= 4 · PERSONAJE ======================= -->
+<section class="v v4" id="personaje" hidden>
+  <div class="hero wrap"><div class="in">
+    <div>
+      <h1>Hola, soy <span class="c1">Lam</span><span class="c2">pp</span><span class="c3">y.</span></h1>
+      <p class="lead">Una lámpara chiquita que flota en tu escritorio y te enseña a usar cualquier programa. Vos pedís, yo señalo, y vos hacés cada paso.</p>
+      <div class="cta"><a class="btn p" href="#personaje-probar" data-go>Quiero conocerla</a><a class="btn s" href="#personaje-caras" data-go>Mirá sus caras</a></div>
+    </div>
+    <div class="face"><img src="assets/alegre.png" alt="Lamppy contenta" width="440" height="440"></div>
+  </div></div>
+  <div class="stripe"></div>
+
+  <div class="sec wrap" id="personaje-caras"><div class="in">
+    <h2>Se le nota todo en la cara.</h2>
+    <p class="sub">Lamppy cambia de gesto según lo que está pasando. Son las caras del personaje.</p>
+    <div class="moods">
+      <div class="mood"><img src="assets/neutral.png" alt="Lamppy tranquila" loading="lazy"><h3>Esperando</h3><p>Atenta a que le pidas algo.</p></div>
+      <div class="mood"><img src="assets/pensativo.png" alt="Lamppy pensativa" loading="lazy"><h3>Pensando</h3><p>Mirando tu pantalla para decidir el paso.</p></div>
+      <div class="mood"><img src="assets/sorprendido.png" alt="Lamppy sorprendida" loading="lazy"><h3>Sorprendida</h3><p>Cuando algo cambia de golpe.</p></div>
+      <div class="mood"><img src="assets/agradecido.png" alt="Lamppy agradecida" loading="lazy"><h3>Tarea lista</h3><p>Cuando terminás todos los pasos.</p></div>
+      <div class="mood"><img src="assets/confundido.png" alt="Lamppy confundida" loading="lazy"><h3>Confundida</h3><p>Si no entendió, te lo dice.</p></div>
+      <div class="mood"><img src="assets/dormido.png" alt="Lamppy dormida" loading="lazy"><h3>Dormida</h3><p>A los 5 minutos sin actividad. Un clic la despierta.</p></div>
+      <div class="mood"><img src="assets/triste.png" alt="Lamppy triste" loading="lazy"><h3>Sin cuota</h3><p>Cuando se acaba la cuota del modelo.</p></div>
+      <div class="mood"><img src="assets/alegre.png" alt="Lamppy alegre" loading="lazy"><h3>Hablando</h3><p>Te explica en voz alta, con globo de texto.</p></div>
+    </div>
+  </div></div>
+
+  <div class="sec wrap"><div class="in">
+    <h2>Tres cosas que sabe hacer</h2>
+    <p class="sub">Y una que no hace nunca: tocar tus programas.</p>
+    <div class="rules">
+      <div><h3>Escucha</h3><p>Mantenés apretada la lámpara y hablás. Soltás y responde.</p></div>
+      <div><h3>Señala</h3><p>Dibuja una marca sobre el botón, el menú o el campo que necesitás.</p></div>
+      <div><h3>Explica</h3><p>Un paso a la vez, con una tarjeta que tacha lo que ya hiciste.</p></div>
+    </div>
+    <div style="margin-top:26px"><div class="demo" data-demo style="max-width:760px"></div></div>
+  </div></div>
+
+  <div class="sec wrap" id="personaje-probar"><div class="in"><div class="try">
+    <h2>Conocela desde el repositorio</h2>
+    <p style="max-width:52ch;opacity:.85">Es una versión de desarrollo para Linux con Hyprland. Sin instalador por ahora.</p>
+    <div class="cmd" data-cmd></div>
+  </div></div></div>
+  <div class="foot wrap">Hecha con cariño, habla español rioplatense.</div>
+</section>
+
+<!-- ======================= 5 · PRIVACIDAD ======================= -->
+<section class="v v5" id="privacidad" hidden>
+  <div class="hero wrap"><div class="in">
+    <div>
+      <h1>Te enseña a usar tu computadora. Lo que ve no se queda.</h1>
+      <p class="lead">Lamppy mira tu pantalla y te escucha solo cuando se lo pedís, para marcarte el paso justo. No guarda nada, no tiene cuentas y no tiene servidores propios.</p>
+      <div class="cta"><a class="btn p" href="#privacidad-datos" data-go>Qué sale de tu equipo</a><a class="btn s" href="#privacidad-probar" data-go>Probarla</a></div>
+      <div class="facts"><span>Sin telemetría</span><span>Sin cuentas</span><span>Tu propia clave</span></div>
+    </div>
+    <img src="assets/agradecido.png" alt="Lamppy agradecida" width="320" height="320">
+  </div></div>
+
+  <div class="sec wrap" id="privacidad-datos"><div class="in">
+    <h2>El recorrido completo de tus datos</h2>
+    <p class="sub">Un solo camino: de tu equipo al modelo de Google, con tu clave. Nada pasa por otro lado.</p>
+    <div class="flow">
+      <div class="node me"><h3>Tu equipo</h3><ul><li>Imágenes de tu pantalla, solo con un pedido o un paso en curso</li><li>Tu voz, solo mientras mantenés apretada la lámpara</li><li>El texto que escribís y enviás</li></ul></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="node"><h3>Gemini API</h3><ul><li>Lo recibe con tu propia clave</li><li>Decide qué decir y dónde marcar</li></ul></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="node me"><h3>De vuelta a vos</h3><ul><li>Voz y globo de texto</li><li>Marca sobre tu pantalla</li><li>Tarjeta con los pasos</li></ul></div>
+    </div>
+    <div class="nope"><div>Telemetría</div><div>Cuentas</div><div>Servidores de Lamppy</div><div>Copia de tu pantalla, voz o texto</div></div>
+    <p class="plan"><b>Sobre el plan de Gemini:</b> en el plan gratuito Google puede usar esos datos para entrenar sus modelos. En el plan pago no.</p>
+  </div></div>
+
+  <div class="sec wrap"><div class="in">
+    <h2>Vos tenés el control</h2>
+    <p class="sub">Cada acción necesita un gesto tuyo.</p>
+    <div class="ctl">
+      <div><h3>Aviso antes de empezar</h3><p>La primera vez no se captura ni se envía nada hasta que apretás «Entendido».</p></div>
+      <div><h3>Micrófono con tu mano</h3><p>Se abre solo mientras mantenés la lámpara apretada. Nunca por su cuenta.</p></div>
+      <div><h3>Se duerme sola</h3><p>A los 5 minutos sin actividad cierra la sesión, la captura y el micrófono.</p></div>
+    </div>
+    <p class="sub" style="margin-top:26px;margin-bottom:0">Lo único que escribe en tu disco es una marca de que ya leíste el aviso.</p>
+  </div></div>
+
+  <div class="sec wrap"><div class="in"><div class="demo" data-demo style="max-width:760px"></div></div></div>
+
+  <div class="sec wrap" id="privacidad-probar"><div class="in">
+    <h2>Probala desde el repositorio</h2>
+    <p class="sub">Versión de desarrollo para Linux con Hyprland. Podés leer el código antes de correrla.</p>
+    <div class="cmd" data-cmd></div>
+  </div></div>
+  <div class="foot wrap"><div class="in">Lamppy · enseña, no actúa.</div></div>
+</section>
+
+<div class="note"><div class="in">
+  <span><strong>Qué estás viendo:</strong> 5 direcciones de landing para elegir. Mismo contenido real de Lamppy, distinto tono.</span>
+  <span>Las caras del personaje se tomaron de <code>apps/desktop/assets/personaje</code>.</span>
+</div></div>
+
+<script>
+(function () {
+  var names = ["taller", "cuaderno", "manual", "personaje", "privacidad"];
+  var tabs = document.querySelectorAll(".tabs button");
+  function show(n) {
+    if (names.indexOf(n) < 0) n = "taller";
+    names.forEach(function (x) { document.getElementById(x).hidden = x !== n; });
+    tabs.forEach(function (b) { b.setAttribute("aria-selected", b.dataset.v === n ? "true" : "false"); });
+    window.dispatchEvent(new Event("resize"));
+  }
+  function fromHash() { var h = location.hash.slice(1); show(names.indexOf(h) >= 0 ? h : (h.split("-")[0] || "taller")); }
+  tabs.forEach(function (b) { b.addEventListener("click", function () { location.hash = b.dataset.v; window.scrollTo(0, 0); }); });
+  window.addEventListener("hashchange", fromHash);
+  document.querySelectorAll("[data-go]").forEach(function (a) {
+    a.addEventListener("click", function (e) {
+      e.preventDefault();
+      var el = document.getElementById(a.getAttribute("href").slice(1));
+      if (el) el.scrollIntoView({ block: "start" });
+    });
+  });
+  fromHash();
+
+  /* comandos con botón de copiar */
+  var cmdText = "git clone <URL del repositorio> lamppy\ncd lamppy\nnpm install\ncp .env.example .env   # pegá tu GEMINI_API_KEY\nnpm run dev";
+  document.querySelectorAll("[data-cmd]").forEach(function (box, i) {
+    var code = document.createTextNode(cmdText);
+    var btn = document.createElement("button");
+    btn.type = "button"; btn.textContent = "Copiar"; btn.id = "copy-" + i;
+    btn.addEventListener("click", function () {
+      var done = function () { btn.textContent = "Copiado"; setTimeout(function () { btn.textContent = "Copiar"; }, 1600); };
+      try { navigator.clipboard.writeText(cmdText).then(done, function () { btn.textContent = "Seleccioná y copiá"; }); }
+      catch (e) { btn.textContent = "Seleccioná y copiá"; }
+    });
+    box.appendChild(code); box.appendChild(btn);
+  });
+
+  /* demo: la lámpara guía una tarea falsa de recorte */
+  var S = [
+    { say: "Primero abrí la imagen que querés recortar. Ya la veo, seguimos.", m: null, steps: ["Abrir la imagen", "Elegir la herramienta de recorte", "Arrastrar sobre la foto"], now: 0 },
+    { say: "Ahora hacé clic en la herramienta de recorte, la que parece dos esquinas.", m: { l: "9px", t: "111px", w: "34px", h: "34px", tx: "Recortar" }, now: 1 },
+    { say: "Arrastrá sobre la foto para elegir qué parte te querés quedar.", m: { l: "26%", t: "14%", w: "34%", h: "40%", tx: "Arrastrá acá" }, now: 2 },
+    { say: "Listo, terminaste. Lo hiciste vos.", m: null, now: 3 }
+  ];
+  document.querySelectorAll("[data-demo]").forEach(function (d, k) {
+    var i = 1, id = "demo" + k;
+    d.innerHTML =
+      '<div class="titlebar"><i></i><i></i><i></i><span>foto-playa.png · Editor de imágenes</span></div>' +
+      '<div class="menu"><span>Archivo</span><span>Editar</span><span>Imagen</span><span>Herramientas</span></div>' +
+      '<div class="tools"><div>✥</div><div>▭</div><div>✎</div><div>◐</div></div>' +
+      '<div class="canvas"><div class="photo"></div></div>' +
+      '<div class="mark" hidden><em></em></div>' +
+      '<div class="steps"><h4>Recortar una foto</h4><ol></ol></div>' +
+      '<div class="balloon" aria-live="polite"></div>' +
+      '<button class="lamp" type="button" aria-label="Pasar al siguiente paso"><img src="assets/alegre.png" alt="" width="92" height="92"></button>';
+    var mark = d.querySelector(".mark"), em = mark.querySelector("em"), ol = d.querySelector("ol"), bal = d.querySelector(".balloon");
+    var canvas = d.querySelector(".canvas");
+    function render() {
+      var s = S[i];
+      bal.textContent = s.say;
+      ol.innerHTML = "";
+      S[0].steps.forEach(function (t, j) { var li = document.createElement("li"); li.textContent = t; li.className = j < s.now ? "" : (j === s.now ? "now" : "todo"); ol.appendChild(li); });
+      if (s.m) {
+        mark.hidden = false; em.textContent = s.m.tx;
+        var inCanvas = i === 2;
+        if (inCanvas) { var r = canvas.getBoundingClientRect(), p = d.getBoundingClientRect(); mark.style.left = (r.left - p.left + r.width * 0.22) + "px"; mark.style.top = (r.top - p.top + r.height * 0.12) + "px"; mark.style.width = r.width * 0.34 + "px"; mark.style.height = r.height * 0.44 + "px"; }
+        else { mark.style.left = s.m.l; mark.style.top = s.m.t; mark.style.width = s.m.w; mark.style.height = s.m.h; }
+      } else mark.hidden = true;
+    }
+    function next() { i = (i + 1) % S.length; render(); }
+    d.querySelector(".lamp").addEventListener("click", next);
+    var more = document.createElement("div");
+    more.className = "demo-next";
+    more.innerHTML = '<button type="button" id="' + id + '">Siguiente paso</button><span>Tocá la lámpara o el botón para avanzar. Es una demo.</span>';
+    more.querySelector("button").addEventListener("click", next);
+    d.parentNode.appendChild(more);
+    var cs = getComputedStyle(d.closest(".v"));
+    more.style.setProperty("--accent", cs.getPropertyValue("--accent") || "#ffc857");
+    more.style.setProperty("--on-accent", cs.getPropertyValue("--on-accent") || "#111");
+    more.querySelector("button").style.background = cs.getPropertyValue("--accent");
+    more.querySelector("button").style.color = cs.getPropertyValue("--on-accent");
+    more.style.color = cs.getPropertyValue("--dim") || "inherit";
+    window.addEventListener("resize", render);
+    render();
+  });
+})();
+</script>
